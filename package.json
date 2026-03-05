@@ -1,0 +1,21 @@
+{
+  "name": "practice-pal",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:server": "cd server && npm run dev",
+    "dev:client": "cd client && npm run dev",
+    "build": "npm run build:client && npm run build:server",
+    "build:server": "cd server && npm run build",
+    "build:client": "cd client && npm run build",
+    "db:push": "cd server && npx drizzle-kit push",
+    "db:seed": "cd server && npx tsx ../scripts/seed.ts",
+    "db:reset": "npm run db:push && npm run db:seed"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "dependencies": {
+    "@playwright/test": "^1.58.2"
+  }
+}
