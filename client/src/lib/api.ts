@@ -9,6 +9,7 @@ import type {
   MasteredItem,
   ProgressStats,
   Invitation,
+  RepertoirePiece,
   StudioRole,
   ChartCategory,
   ChartItemConfig,
@@ -126,6 +127,9 @@ export const updateChart = (
 
 export const deleteChart = (chartId: string) =>
   api.delete<{ success: boolean }>(`/charts/${chartId}`);
+
+export const getRepertoirePieces = (studioId: string) =>
+  api.get<RepertoirePiece[]>(`/charts/repertoire-pieces?studioId=${studioId}`);
 
 // Sessions — backend mounts sessions router at /api/sessions
 export const startSession = (chartId: string) =>

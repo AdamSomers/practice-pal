@@ -4,9 +4,11 @@ import { motion } from 'framer-motion';
 import type { ChartCategory, ChartItemConfig } from '../../lib/types';
 import KeySelector from './KeySelector';
 import ModifierSelector from './ModifierSelector';
+import PieceCombobox from './PieceCombobox';
 
 interface ItemFormProps {
   category: ChartCategory;
+  studioId?: string;
   initialConfig?: ChartItemConfig;
   initialRepetitions?: number;
   onSave: (config: ChartItemConfig, repetitions: number) => void;
@@ -25,6 +27,7 @@ const CATEGORY_LABELS: Record<ChartCategory, string> = {
 
 export default function ItemForm({
   category,
+  studioId,
   initialConfig,
   initialRepetitions,
   onSave,
@@ -73,7 +76,7 @@ export default function ItemForm({
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Category-specific fields */}
-          {renderCategoryFields(category, config, update)}
+          {renderCategoryFields(category, config, update, studioId)}
 
           {/* Repetitions - common to all */}
           <div>
@@ -138,7 +141,8 @@ export default function ItemForm({
 function renderCategoryFields(
   category: ChartCategory,
   config: ChartItemConfig,
-  update: (key: string, value: unknown) => void
+  update: (key: string, value: unknown) => void,
+  studioId?: string,
 ) {
   switch (category) {
     case 'scales':
@@ -243,17 +247,12 @@ function renderCategoryFields(
     case 'repertoire':
       return (
         <>
-          <TextInput
-            label="Piece Title"
-            value={config.piece || ''}
-            onChange={(v) => update('piece', v)}
-            placeholder="e.g., Fur Elise"
-          />
-          <TextInput
-            label="Composer"
-            value={config.composer || ''}
-            onChange={(v) => update('composer', v)}
-            placeholder="e.g., Beethoven"
+          <PieceCombobox
+            studioId={studioId || ''}
+            piece={config.piece || ''}
+            composer={config.composer || ''}
+            onPieceChange={(v) => update('piece', v)}
+            onComposerChange={(v) => update('composer', v)}
           />
           <TextInput
             label="Movement / Section"

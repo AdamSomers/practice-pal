@@ -1,9 +1,50 @@
 import { Router } from 'express';
 import { db, schema } from '../db/index.js';
-import { eq, and, asc } from 'drizzle-orm';
+import { eq, and, asc, desc, sql } from 'drizzle-orm';
 import { verifyMembership } from './studios.js';
 
 export const chartsRouter = Router();
+
+// Get distinct repertoire pieces for a studio (for autocomplete)
+chartsRouter.get('/repertoire-pieces', async (req, res) => {
+  try {
+    const userId = req.session.userId!;
+    const studioId = req.query.studioId as string;
+    if (!studioId) {
+      res.status(400).json({ error: 'studioId query param is required' });
+      return;
+    }
+
+    const membership = await verifyMembership(userId, studioId);
+    if (!membership) {
+      res.status(403).json({ error: 'Not a member of this studio' });
+      return;
+    }
+
+    const rows = await db
+      .select({
+        piece: sql<string>`config->>'piece'`,
+        composer: sql<string>`config->>'composer'`,
+        lastUsed: sql<string>`max(${schema.practiceCharts.updatedAt})`,
+      })
+      .from(schema.chartItems)
+      .innerJoin(schema.practiceCharts, eq(schema.chartItems.chartId, schema.practiceCharts.id))
+      .where(
+        and(
+          eq(schema.practiceCharts.studioId, studioId),
+          eq(schema.chartItems.category, 'repertoire'),
+          sql`config->>'piece' IS NOT NULL AND config->>'piece' != ''`
+        )
+      )
+      .groupBy(sql`config->>'piece'`, sql`config->>'composer'`)
+      .orderBy(sql`max(${schema.practiceCharts.updatedAt}) DESC`);
+
+    res.json(rows);
+  } catch (err) {
+    console.error('repertoire-pieces error:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
 
 // List charts for a studio
 chartsRouter.get('/', async (req, res) => {

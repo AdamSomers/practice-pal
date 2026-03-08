@@ -330,6 +330,7 @@ export default function ChartBuilderPage() {
         {newItemCategory && (
           <ItemForm
             category={newItemCategory}
+            studioId={studioId}
             onSave={handleAddItem}
             onClose={() => setNewItemCategory(null)}
           />
@@ -337,6 +338,7 @@ export default function ChartBuilderPage() {
         {editingItem && (
           <ItemForm
             category={editingItem.category}
+            studioId={studioId}
             initialConfig={editingItem.config}
             initialRepetitions={editingItem.repetitions}
             onSave={handleEditItem}

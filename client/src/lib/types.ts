@@ -119,6 +119,12 @@ export interface WeeklyDataPoint {
   minutes: number;
 }
 
+export interface RepertoirePiece {
+  piece: string;
+  composer: string | null;
+  lastUsed: string;
+}
+
 export interface Invitation {
   id: string;
   studioId: string;

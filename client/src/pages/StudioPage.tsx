@@ -10,7 +10,7 @@ import {
   Award,
   Clock,
   LayoutGrid,
-  ChevronRight,
+  Pencil,
   FileText,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -239,7 +239,7 @@ function ChartsTab({
                     }}
                     className="p-2 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
                   >
-                    <ChevronRight className="w-4 h-4" />
+                    <Pencil className="w-4 h-4" />
                   </button>
                 </div>
               </div>
