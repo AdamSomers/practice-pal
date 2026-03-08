@@ -6,6 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 PracticePal is a music practice tracker web app for students, parents, and teachers. Teachers create weekly practice charts; students complete practice sessions with gamified interactions (animations, sounds, rewards). The full spec is in `PracticePal-Spec-v1.md`.
 
+**README.md maintenance:** When adding new features, commands, or changing setup steps, update `README.md` to keep it in sync.
+
 ## Tech Stack
 
 - **Frontend**: React 18 + TypeScript, Vite, Tailwind CSS v4, Framer Motion, Zustand, Recharts, Lucide icons, canvas-confetti
