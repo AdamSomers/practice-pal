@@ -54,7 +54,7 @@ export default function ChartBuilderPage() {
   const studioIdFromUrl = window.location.pathname.match(/\/studios\/([^/]+)/)?.[1];
 
   const [title, setTitle] = useState(getDefaultTitle());
-  const [minimumMinutes, setMinimumMinutes] = useState(20);
+  const [minimumMinutes, setMinimumMinutes] = useState(0);
   const [items, setItems] = useState<LocalChartItem[]>([]);
   const [studioId, setStudioId] = useState(studioIdFromUrl || '');
   const [loading, setLoading] = useState(isEditing);
@@ -229,6 +229,7 @@ export default function ChartBuilderPage() {
           onChange={(e) => setMinimumMinutes(Number(e.target.value))}
           className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-800 focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-transparent transition shadow-sm"
         >
+          <option value={0}>No minimum</option>
           {[15, 20, 25, 30, 45, 60].map((min) => (
             <option key={min} value={min}>
               {min} minutes

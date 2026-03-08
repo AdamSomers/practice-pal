@@ -28,7 +28,7 @@ sessionsRouter.post('/', async (req, res) => {
       return;
     }
 
-    const timerTargetSeconds = chart.minimumPracticeMinutes * 60;
+    const timerTargetSeconds = (chart.minimumPracticeMinutes || 0) * 60;
 
     const [session] = await db.insert(schema.practiceSessions).values({
       chartId,

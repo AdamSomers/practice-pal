@@ -20,12 +20,12 @@ PracticePal is a music practice tracker web app for students, parents, and teach
 # Install dependencies (root + server + client)
 npm install && cd server && npm install && cd ../client && npm install && cd ..
 
-# Start both servers (backend :3001, frontend :5173)
+# Start both servers (backend :3002, frontend :5174)
 npm run dev
 
 # Or start individually
-npm run dev:server   # Express on localhost:3001
-npm run dev:client   # Vite on localhost:5173 (proxies /api to :3001)
+npm run dev:server   # Express on 0.0.0.0:3002
+npm run dev:client   # Vite on 0.0.0.0:5174 (proxies /api to :3002)
 
 # Database
 npm run db:push      # Push schema to PostgreSQL via drizzle-kit
@@ -126,7 +126,20 @@ Login via dev accounts on the login page:
 DATABASE_URL=postgres://adam@localhost:5432/practicepal
 SESSION_SECRET=dev-secret-change-me
 APP_ENV=development
-PORT=3001
+PORT=3002
 ```
 
 PostgreSQL 16 via Homebrew. Binary at `/opt/homebrew/opt/postgresql@16/bin/psql`.
+
+## Port Registry (Local Dev)
+
+To avoid collisions with other projects on this machine, this project uses non-default ports.
+
+| Project | Frontend | Backend |
+|---------|----------|---------|
+| practice-pal | 5173 | 3000 |
+| **practice-pal-team** | **5174** | **3002** |
+| lead-app | 5175 | 8001 |
+| fitness-app | 5176 | 8002 |
+
+**All dev servers must bind to `0.0.0.0`** (not localhost) so they're accessible from other devices on the local network (e.g., phone at `http://10.0.0.7:<port>`).

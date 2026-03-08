@@ -29,6 +29,7 @@ export default function SessionPlayerPage() {
   const [session, setSession] = useState<PracticeSession | null>(null);
   const [checkState, setCheckState] = useState<CheckState>({});
   const [loading, setLoading] = useState(true);
+  const hasTimerTarget = (chart?.minimumPracticeMinutes ?? 0) > 0;
   const [timerMet, setTimerMet] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
   const [elapsed, setElapsed] = useState(0);
@@ -59,6 +60,13 @@ export default function SessionPlayerPage() {
       }
     })();
   }, [chartId]);
+
+  // If no timer target, mark timer as met immediately
+  useEffect(() => {
+    if (chart && !hasTimerTarget) {
+      setTimerMet(true);
+    }
+  }, [chart, hasTimerTarget]);
 
   // Init audio on first interaction
   const handleFirstInteraction = useCallback(() => {
@@ -185,7 +193,7 @@ export default function SessionPlayerPage() {
     );
   }
 
-  const targetSeconds = chart.minimumPracticeMinutes * 60;
+  const targetSeconds = (chart.minimumPracticeMinutes || 0) * 60;
   const sortedItems = [...chart.items].sort((a, b) => a.sortOrder - b.sortOrder);
 
   return (
@@ -202,12 +210,20 @@ export default function SessionPlayerPage() {
       <h1 className="text-xl font-extrabold text-gray-800">{chart.title}</h1>
 
       {/* Timer */}
-      <TimerBar
-        targetSeconds={targetSeconds}
-        isRunning={true}
-        onTimeUpdate={setElapsed}
-        onTargetReached={() => setTimerMet(true)}
-      />
+      {hasTimerTarget ? (
+        <TimerBar
+          targetSeconds={targetSeconds}
+          isRunning={true}
+          onTimeUpdate={setElapsed}
+          onTargetReached={() => setTimerMet(true)}
+        />
+      ) : (
+        <TimerBar
+          targetSeconds={0}
+          isRunning={true}
+          onTimeUpdate={setElapsed}
+        />
+      )}
 
       {/* Practice items */}
       <div className="space-y-3">

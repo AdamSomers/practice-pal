@@ -38,7 +38,7 @@ export default function TimerBar({
       setElapsed(newElapsed);
       onTimeUpdate?.(newElapsed);
 
-      if (newElapsed >= targetSeconds && !reachedRef.current) {
+      if (targetSeconds > 0 && newElapsed >= targetSeconds && !reachedRef.current) {
         reachedRef.current = true;
         onTargetReached?.();
       }
@@ -53,8 +53,9 @@ export default function TimerBar({
     };
   }, [isRunning, targetSeconds, onTimeUpdate, onTargetReached]);
 
-  const progress = Math.min(elapsed / targetSeconds, 1);
-  const isComplete = elapsed >= targetSeconds;
+  const hasTarget = targetSeconds > 0;
+  const progress = hasTarget ? Math.min(elapsed / targetSeconds, 1) : 0;
+  const isComplete = hasTarget && elapsed >= targetSeconds;
 
   return (
     <div
@@ -77,32 +78,36 @@ export default function TimerBar({
             {formatTime(elapsed)}
           </span>
         </div>
-        <span
-          className={`text-sm font-semibold ${
-            isComplete ? 'text-white/80' : 'text-gray-400'
-          }`}
-        >
-          / {formatTime(targetSeconds)}
-        </span>
+        {hasTarget && (
+          <span
+            className={`text-sm font-semibold ${
+              isComplete ? 'text-white/80' : 'text-gray-400'
+            }`}
+          >
+            / {formatTime(targetSeconds)}
+          </span>
+        )}
       </div>
 
       {/* Progress bar */}
-      <div
-        className={`h-2.5 rounded-full overflow-hidden ${
-          isComplete ? 'bg-white/30' : 'bg-gray-100'
-        }`}
-      >
+      {hasTarget && (
         <div
-          className={`h-full rounded-full transition-all duration-500 ease-out ${
-            isComplete
-              ? 'bg-white'
-              : progress > 0.7
-              ? 'bg-gradient-to-r from-primary-500 to-teal-400'
-              : 'bg-primary-500'
+          className={`h-2.5 rounded-full overflow-hidden ${
+            isComplete ? 'bg-white/30' : 'bg-gray-100'
           }`}
-          style={{ width: `${progress * 100}%` }}
-        />
-      </div>
+        >
+          <div
+            className={`h-full rounded-full transition-all duration-500 ease-out ${
+              isComplete
+                ? 'bg-white'
+                : progress > 0.7
+                ? 'bg-gradient-to-r from-primary-500 to-teal-400'
+                : 'bg-primary-500'
+            }`}
+            style={{ width: `${progress * 100}%` }}
+          />
+        </div>
+      )}
 
       {isComplete && (
         <p className="text-white/90 text-xs font-semibold mt-2 text-center">

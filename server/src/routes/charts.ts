@@ -54,7 +54,7 @@ chartsRouter.post('/', async (req, res) => {
       studioId,
       title,
       createdBy: userId,
-      minimumPracticeMinutes: minimumPracticeMinutes ?? 20,
+      minimumPracticeMinutes: minimumPracticeMinutes ?? 0,
     }).returning();
 
     let createdItems: (typeof schema.chartItems.$inferSelect)[] = [];

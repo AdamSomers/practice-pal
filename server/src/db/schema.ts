@@ -37,7 +37,7 @@ export const practiceCharts = pgTable('practice_charts', {
   studioId: uuid('studio_id').notNull().references(() => studios.id, { onDelete: 'cascade' }),
   title: text('title').notNull(),
   createdBy: uuid('created_by').notNull().references(() => users.id),
-  minimumPracticeMinutes: integer('minimum_practice_minutes').notNull().default(20),
+  minimumPracticeMinutes: integer('minimum_practice_minutes').notNull().default(0),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
