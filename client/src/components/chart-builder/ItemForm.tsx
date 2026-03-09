@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { motion } from 'framer-motion';
 import type { ChartCategory, ChartItemConfig } from '../../lib/types';
@@ -33,10 +33,20 @@ export default function ItemForm({
   onSave,
   onClose,
 }: ItemFormProps) {
+  const PRESETS = [1, 2, 3, 4, 5, 6, 8, 10];
+  const lastUsed = Number(localStorage.getItem('pp_last_reps')) || 5;
+  const defaultReps = initialRepetitions ?? lastUsed;
+
   const [config, setConfig] = useState<ChartItemConfig>(
     initialConfig || { modifiers: [] }
   );
-  const [repetitions, setRepetitions] = useState(initialRepetitions ?? 3);
+  const [repetitions, setRepetitions] = useState(defaultReps);
+  const [customMode, setCustomMode] = useState(!PRESETS.includes(defaultReps));
+  const customInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (customMode) customInputRef.current?.focus();
+  }, [customMode]);
 
   const update = (key: string, value: unknown) => {
     setConfig((prev) => ({ ...prev, [key]: value }));
@@ -44,6 +54,7 @@ export default function ItemForm({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    localStorage.setItem('pp_last_reps', String(repetitions));
     onSave(config, repetitions);
   };
 
@@ -83,17 +94,48 @@ export default function ItemForm({
             <label className="block text-sm font-semibold text-gray-700 mb-1.5">
               Repetitions
             </label>
-            <select
-              value={repetitions}
-              onChange={(e) => setRepetitions(Number(e.target.value))}
-              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-400 transition"
-            >
-              {[1, 2, 3, 4, 5, 6, 8, 10].map((n) => (
-                <option key={n} value={n}>
-                  {n}x
-                </option>
-              ))}
-            </select>
+            {customMode ? (
+              <div className="flex gap-2">
+                <input
+                  ref={customInputRef}
+                  type="number"
+                  min={1}
+                  max={99}
+                  value={repetitions}
+                  onChange={(e) => setRepetitions(Math.max(1, Number(e.target.value)))}
+                  className="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-400 transition"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (PRESETS.includes(repetitions)) setCustomMode(false);
+                    else setCustomMode(false);
+                  }}
+                  className="px-3 py-3 text-sm font-semibold text-gray-500 bg-gray-50 border border-gray-200 rounded-xl hover:bg-gray-100 transition"
+                >
+                  Done
+                </button>
+              </div>
+            ) : (
+              <select
+                value={PRESETS.includes(repetitions) ? repetitions : 'custom'}
+                onChange={(e) => {
+                  if (e.target.value === 'custom') {
+                    setCustomMode(true);
+                  } else {
+                    setRepetitions(Number(e.target.value));
+                  }
+                }}
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-400 transition"
+              >
+                {PRESETS.map((n) => (
+                  <option key={n} value={n}>
+                    {n}x
+                  </option>
+                ))}
+                <option value="custom">More...</option>
+              </select>
+            )}
           </div>
 
           {/* Modifiers */}

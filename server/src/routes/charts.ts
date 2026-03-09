@@ -62,11 +62,17 @@ chartsRouter.get('/', async (req, res) => {
       return;
     }
 
-    const charts = await db.select()
+    const rows = await db.select({
+      chart: schema.practiceCharts,
+      itemCount: sql<number>`count(${schema.chartItems.id})::int`,
+    })
       .from(schema.practiceCharts)
+      .leftJoin(schema.chartItems, eq(schema.chartItems.chartId, schema.practiceCharts.id))
       .where(eq(schema.practiceCharts.studioId, studioId))
+      .groupBy(schema.practiceCharts.id)
       .orderBy(asc(schema.practiceCharts.createdAt));
 
+    const charts = rows.map((r) => ({ ...r.chart, itemCount: r.itemCount }));
     res.json(charts);
   } catch (err) {
     console.error('list charts error:', err);
@@ -106,7 +112,7 @@ chartsRouter.post('/', async (req, res) => {
           category: item.category,
           sortOrder: item.sortOrder,
           config: item.config,
-          repetitions: item.repetitions ?? 3,
+          repetitions: item.repetitions ?? 5,
         }))
       ).returning();
     }
@@ -164,7 +170,7 @@ chartsRouter.patch('/:id', async (req, res) => {
       return;
     }
 
-    const { title, minimumPracticeMinutes } = req.body;
+    const { title, minimumPracticeMinutes, items } = req.body;
     const updates: Record<string, unknown> = { updatedAt: new Date() };
     if (title !== undefined) updates.title = title;
     if (minimumPracticeMinutes !== undefined) updates.minimumPracticeMinutes = minimumPracticeMinutes;
@@ -174,7 +180,25 @@ chartsRouter.patch('/:id', async (req, res) => {
       .where(eq(schema.practiceCharts.id, req.params.id))
       .returning();
 
-    res.json(updated);
+    let updatedItems: (typeof schema.chartItems.$inferSelect)[] = [];
+    if (items && Array.isArray(items)) {
+      // Delete existing items and replace with new set
+      await db.delete(schema.chartItems).where(eq(schema.chartItems.chartId, chart.id));
+
+      if (items.length > 0) {
+        updatedItems = await db.insert(schema.chartItems).values(
+          items.map((item: { category: string; sortOrder: number; config: unknown; repetitions?: number }) => ({
+            chartId: chart.id,
+            category: item.category as typeof schema.chartCategoryEnum.enumValues[number],
+            sortOrder: item.sortOrder,
+            config: item.config,
+            repetitions: item.repetitions ?? 5,
+          }))
+        ).returning();
+      }
+    }
+
+    res.json({ ...updated, items: updatedItems });
   } catch (err) {
     console.error('update chart error:', err);
     res.status(500).json({ error: 'Internal server error' });
@@ -279,7 +303,7 @@ chartsRouter.post('/:id/items', async (req, res) => {
       category,
       sortOrder: sortOrder ?? 0,
       config,
-      repetitions: repetitions ?? 3,
+      repetitions: repetitions ?? 5,
     }).returning();
 
     res.status(201).json(item);

@@ -5,6 +5,29 @@ import type { ChartCategory, ChartItemConfig } from '../../lib/types';
 import { getItemLabel } from '../chart-builder/ChartItemCard';
 import { CATEGORIES } from '../chart-builder/CategoryPicker';
 
+function getItemDetails(category: ChartCategory, config: ChartItemConfig): string {
+  const parts: string[] = [];
+  switch (category) {
+    case 'repertoire':
+      if (config.movement) parts.push(config.movement);
+      if (config.measures) parts.push(`mm. ${config.measures}`);
+      if (config.bpm) parts.push(`${config.bpm} BPM`);
+      break;
+    case 'scales':
+    case 'arpeggios':
+      if (config.bpm) parts.push(`${config.bpm} BPM`);
+      break;
+    case 'sight_reading':
+      if (config.key) parts.push(config.key);
+      break;
+    default:
+      if (config.bpm) parts.push(`${config.bpm} BPM`);
+      if (config.description) parts.push(config.description);
+      break;
+  }
+  return parts.join(' \u00B7 ');
+}
+
 interface CheckboxGridProps {
   itemId: string;
   category: ChartCategory;
@@ -65,6 +88,11 @@ export default function CheckboxGrid({
           <p className="font-semibold text-gray-800 text-sm truncate capitalize">
             {label}
           </p>
+          {getItemDetails(category, config) && (
+            <p className="text-[11px] text-gray-500 truncate">
+              {getItemDetails(category, config)}
+            </p>
+          )}
           {config.modifiers && config.modifiers.length > 0 && (
             <p className="text-[11px] text-gray-400 truncate">
               {config.modifiers.join(' / ')}

@@ -48,7 +48,7 @@ export const chartItems = pgTable('chart_items', {
   category: chartCategoryEnum('category').notNull(),
   sortOrder: integer('sort_order').notNull().default(0),
   config: jsonb('config').notNull(),
-  repetitions: integer('repetitions').notNull().default(3),
+  repetitions: integer('repetitions').notNull().default(5),
 });
 
 export const practiceSessions = pgTable('practice_sessions', {

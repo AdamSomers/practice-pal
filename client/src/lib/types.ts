@@ -75,6 +75,7 @@ export interface PracticeChart {
   createdAt: string;
   updatedAt: string;
   items?: ChartItem[];
+  itemCount?: number;
   sessionCount?: number;
 }
 

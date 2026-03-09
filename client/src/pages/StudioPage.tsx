@@ -216,7 +216,7 @@ function ChartsTab({
                     </span>
                     <span className="flex items-center gap-1">
                       <LayoutGrid className="w-3 h-3" />
-                      {chart.items?.length ?? '?'} items
+                      {chart.itemCount ?? chart.items?.length ?? 0} items
                     </span>
                     <span>{chart.minimumPracticeMinutes ? `${chart.minimumPracticeMinutes} min` : 'No min'}</span>
                   </div>
