@@ -36,8 +36,6 @@ interface CheckboxGridProps {
   checked: Set<number>;
   onCheck: (repetitionNumber: number) => void;
   onUncheck: (repetitionNumber: number) => void;
-  timerMet: boolean;
-  allOtherItemsComplete: boolean;
 }
 
 export default function CheckboxGrid({
@@ -48,23 +46,16 @@ export default function CheckboxGrid({
   checked,
   onCheck,
   onUncheck,
-  timerMet,
-  allOtherItemsComplete,
 }: CheckboxGridProps) {
   const label = getItemLabel(category, config);
   const catInfo = CATEGORIES.find((c) => c.key === category);
   const allChecked = checked.size === repetitions;
-  const uncheckedCount = repetitions - checked.size;
 
   const handleToggle = (repNum: number) => {
     if (checked.has(repNum)) {
       playUncheckSound();
       onUncheck(repNum);
     } else {
-      // Lock last checkbox if timer not met
-      if (uncheckedCount === 1 && !checked.has(repNum) && !timerMet) {
-        return;
-      }
       playCheckSound();
       onCheck(repNum);
     }
@@ -114,27 +105,17 @@ export default function CheckboxGrid({
       <div className="flex flex-wrap gap-2">
         {Array.from({ length: repetitions }, (_, i) => i + 1).map((repNum) => {
           const isChecked = checked.has(repNum);
-          const isLocked =
-            !isChecked && uncheckedCount === 1 && !timerMet;
 
           return (
             <motion.button
               key={repNum}
-              whileTap={!isLocked ? { scale: 0.85 } : undefined}
+              whileTap={{ scale: 0.85 }}
               onClick={() => handleToggle(repNum)}
-              disabled={isLocked}
               className={`relative w-11 h-11 rounded-xl border-2 flex items-center justify-center transition-all ${
                 isChecked
                   ? 'bg-primary-600 border-primary-600 text-white shadow-sm'
-                  : isLocked
-                  ? 'bg-gray-50 border-gray-200 text-gray-300 cursor-not-allowed'
                   : 'bg-white border-gray-200 text-gray-400 hover:border-primary-300 hover:text-primary-400'
               }`}
-              title={
-                isLocked
-                  ? 'Complete minimum practice time first'
-                  : undefined
-              }
             >
               {isChecked ? (
                 <motion.div

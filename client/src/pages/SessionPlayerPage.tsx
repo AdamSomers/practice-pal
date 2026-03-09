@@ -225,30 +225,36 @@ export default function SessionPlayerPage() {
         />
       )}
 
+      {/* Encourage continued practice when all checked but timer not met */}
+      {allComplete && !timerMet && hasTimerTarget && (
+        <motion.div
+          initial={{ opacity: 0, y: -4 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center px-4 py-3 bg-primary-50 border border-primary-200 rounded-xl"
+        >
+          <p className="text-sm font-semibold text-primary-700">
+            Great work! Keep practicing until the timer finishes.
+          </p>
+          <p className="text-xs text-primary-500 mt-0.5">
+            Review tricky spots, play through again, or try a faster tempo.
+          </p>
+        </motion.div>
+      )}
+
       {/* Practice items */}
       <div className="space-y-3">
-        {sortedItems.map((item) => {
-          const otherItemsComplete = chart.items
-            .filter((i) => i.id !== item.id)
-            .every(
-              (i) => (checkState[i.id]?.size ?? 0) === i.repetitions
-            );
-
-          return (
-            <CheckboxGrid
-              key={item.id}
-              itemId={item.id}
-              category={item.category}
-              config={item.config}
-              repetitions={item.repetitions}
-              checked={new Set(checkState[item.id]?.keys() ?? [])}
-              onCheck={(repNum) => handleCheck(item.id, repNum)}
-              onUncheck={(repNum) => handleUncheck(item.id, repNum)}
-              timerMet={timerMet}
-              allOtherItemsComplete={otherItemsComplete}
-            />
-          );
-        })}
+        {sortedItems.map((item) => (
+          <CheckboxGrid
+            key={item.id}
+            itemId={item.id}
+            category={item.category}
+            config={item.config}
+            repetitions={item.repetitions}
+            checked={new Set(checkState[item.id]?.keys() ?? [])}
+            onCheck={(repNum) => handleCheck(item.id, repNum)}
+            onUncheck={(repNum) => handleUncheck(item.id, repNum)}
+          />
+        ))}
       </div>
 
       {/* Progress */}
