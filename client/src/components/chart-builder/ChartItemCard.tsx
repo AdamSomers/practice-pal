@@ -78,8 +78,32 @@ export default function ChartItemCard({
       {/* Content */}
       <div className="flex-1 min-w-0">
         <p className="font-semibold text-gray-800 truncate capitalize">{label}</p>
-        <div className="flex items-center gap-2 mt-0.5 text-xs text-gray-400">
-          <span>{repetitions}x repetitions</span>
+        <div className="flex items-center gap-2 mt-0.5 text-xs text-gray-400 flex-wrap">
+          <span>{repetitions}x</span>
+          {category === 'repertoire' && config.movement && (
+            <>
+              <span className="text-gray-300">|</span>
+              <span className="truncate">{config.movement}</span>
+            </>
+          )}
+          {category === 'repertoire' && config.measures && (
+            <>
+              <span className="text-gray-300">|</span>
+              <span>mm. {config.measures}</span>
+            </>
+          )}
+          {config.bpm && (
+            <>
+              <span className="text-gray-300">|</span>
+              <span>{config.bpm} BPM</span>
+            </>
+          )}
+          {category === 'sight_reading' && config.key && (
+            <>
+              <span className="text-gray-300">|</span>
+              <span>{config.key}</span>
+            </>
+          )}
           {config.modifiers && config.modifiers.length > 0 && (
             <>
               <span className="text-gray-300">|</span>
@@ -90,10 +114,10 @@ export default function ChartItemCard({
               </span>
             </>
           )}
-          {config.bpm && (
+          {config.notes && (
             <>
               <span className="text-gray-300">|</span>
-              <span>{config.bpm} BPM</span>
+              <span className="truncate italic">{config.notes}</span>
             </>
           )}
         </div>
