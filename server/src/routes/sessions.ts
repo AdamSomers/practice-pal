@@ -1,7 +1,8 @@
 import { Router } from 'express';
 import { db, schema } from '../db/index.js';
-import { eq, asc } from 'drizzle-orm';
+import { eq, and, asc } from 'drizzle-orm';
 import { verifyMembership } from './studios.js';
+import { pickRandomEmoji } from '../lib/rewardEmojis.js';
 
 export const sessionsRouter = Router();
 
@@ -165,6 +166,69 @@ sessionsRouter.delete('/:id/checkoffs/:checkoffId', async (req, res) => {
     res.json({ success: true });
   } catch (err) {
     console.error('undo checkoff error:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Claim a reward for a completed session
+sessionsRouter.post('/:id/reward', async (req, res) => {
+  try {
+    const userId = req.session.userId!;
+
+    const [session] = await db.select().from(schema.practiceSessions).where(eq(schema.practiceSessions.id, req.params.id));
+    if (!session) {
+      res.status(404).json({ error: 'Session not found' });
+      return;
+    }
+
+    if (session.userId !== userId) {
+      res.status(403).json({ error: 'Not your session' });
+      return;
+    }
+
+    const [chart] = await db.select().from(schema.practiceCharts).where(eq(schema.practiceCharts.id, session.chartId));
+    if (!chart) {
+      res.status(404).json({ error: 'Chart not found' });
+      return;
+    }
+
+    const [studio] = await db.select().from(schema.studios).where(eq(schema.studios.id, chart.studioId));
+    if (!studio) {
+      res.status(404).json({ error: 'Studio not found' });
+      return;
+    }
+
+    // Idempotent: return existing reward if already claimed
+    const [existing] = await db.select()
+      .from(schema.sessionRewards)
+      .where(and(
+        eq(schema.sessionRewards.sessionId, session.id),
+        eq(schema.sessionRewards.userId, userId)
+      ));
+
+    if (existing) {
+      res.json(existing);
+      return;
+    }
+
+    const categories = (studio.rewardCategories as string[]) || ['animals', 'music', 'food'];
+    const pick = pickRandomEmoji(categories);
+    if (!pick) {
+      res.status(400).json({ error: 'No reward categories configured' });
+      return;
+    }
+
+    const [reward] = await db.insert(schema.sessionRewards).values({
+      sessionId: session.id,
+      studioId: chart.studioId,
+      userId,
+      emoji: pick.emoji,
+      category: pick.category,
+    }).returning();
+
+    res.status(201).json(reward);
+  } catch (err) {
+    console.error('claim reward error:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

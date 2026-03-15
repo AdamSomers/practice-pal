@@ -13,6 +13,7 @@ export interface Studio {
   name: string;
   instrument: string | null;
   ownerId: string;
+  rewardCategories?: string[];
   createdAt: string;
   role?: StudioRole;
 }
@@ -124,6 +125,41 @@ export interface RepertoirePiece {
   piece: string;
   composer: string | null;
   lastUsed: string;
+}
+
+export interface SessionReward {
+  id: string;
+  sessionId: string;
+  studioId: string;
+  userId: string;
+  emoji: string;
+  category: string;
+  earnedAt: string;
+}
+
+export interface CustomReward {
+  id: string;
+  studioId: string;
+  createdBy: string;
+  title: string;
+  emoji: string | null;
+  createdAt: string;
+}
+
+export interface Goal {
+  id: string;
+  studioId: string;
+  createdBy: string;
+  title: string;
+  description: string | null;
+  targetDate: string | null;
+  rewardType: 'emoji' | 'custom';
+  rewardEmoji: string | null;
+  customRewardId: string | null;
+  customRewardTitle: string | null;
+  completedAt: string | null;
+  completedBy: string | null;
+  createdAt: string;
 }
 
 export interface Invitation {

@@ -84,6 +84,9 @@ async function main() {
   // 1. Clear all tables in reverse FK order
   // -----------------------------------------------------------------------
   log('Clearing existing data...');
+  await db.delete(schema.goals);
+  await db.delete(schema.customRewards);
+  await db.delete(schema.sessionRewards);
   await db.delete(schema.sessionCheckoffs);
   await db.delete(schema.practiceSessions);
   await db.delete(schema.masteredItems);
@@ -130,7 +133,7 @@ async function main() {
   const studioRows = [
     { id: sid('bob-piano'), name: 'Bob Piano', instrument: 'Piano', ownerId: uid('blank-bob'), createdAt: weeksAgo(8) },
     { id: sid('carol-piano'), name: 'Carol Piano', instrument: 'Piano', ownerId: uid('one-chart-carol'), createdAt: weeksAgo(4) },
-    { id: sid('dana-piano'), name: 'Dana Piano', instrument: 'Piano', ownerId: uid('active-dana'), createdAt: weeksAgo(10) },
+    { id: sid('dana-piano'), name: 'Dana Piano', instrument: 'Piano', ownerId: uid('active-dana'), rewardCategories: ['animals', 'music', 'food'], createdAt: weeksAgo(10) },
     { id: sid('eli-piano'), name: 'Eli Piano', instrument: 'Piano', ownerId: uid('casual-eli'), createdAt: weeksAgo(6) },
     { id: sid('gina-piano'), name: 'Gina Piano', instrument: 'Piano', ownerId: uid('parent-frank'), createdAt: weeksAgo(12) },
     { id: sid('henry-guitar'), name: 'Henry Guitar', instrument: 'Guitar', ownerId: uid('parent-frank'), createdAt: weeksAgo(10) },
@@ -529,7 +532,84 @@ async function main() {
   log(`Created ${allCheckoffs.length} checkoffs.`);
 
   // -----------------------------------------------------------------------
-  // 7. Mastered items (Dana: 4)
+  // 7. Session rewards for Dana
+  // -----------------------------------------------------------------------
+  log('Creating session rewards...');
+  const rewardEmojis = [
+    { emoji: '🐶', category: 'animals' },
+    { emoji: '🎵', category: 'music' },
+    { emoji: '🍕', category: 'food' },
+    { emoji: '🐱', category: 'animals' },
+    { emoji: '🎹', category: 'music' },
+    { emoji: '🍦', category: 'food' },
+    { emoji: '🦊', category: 'animals' },
+    { emoji: '🎸', category: 'music' },
+    { emoji: '🧁', category: 'food' },
+    { emoji: '🐼', category: 'animals' },
+    { emoji: '🎺', category: 'music' },
+    { emoji: '🍩', category: 'food' },
+    { emoji: '🐨', category: 'animals' },
+    { emoji: '🥁', category: 'music' },
+    { emoji: '🍪', category: 'food' },
+  ];
+  const danaCompletedSessions = allSessions.filter(
+    s => s.userId === uid('active-dana') && s.completedAt !== null
+  );
+  const sessionRewardRows = danaCompletedSessions.map((s, i) => ({
+    id: makeId(`reward:dana-${i}`),
+    sessionId: s.id,
+    studioId: sid('dana-piano'),
+    userId: uid('active-dana'),
+    emoji: rewardEmojis[i % rewardEmojis.length].emoji,
+    category: rewardEmojis[i % rewardEmojis.length].category,
+    earnedAt: s.completedAt!,
+  }));
+  await db.insert(schema.sessionRewards).values(sessionRewardRows);
+  log(`Created ${sessionRewardRows.length} session rewards.`);
+
+  // -----------------------------------------------------------------------
+  // 8. Custom rewards and goals for Dana
+  // -----------------------------------------------------------------------
+  log('Creating custom rewards and goals...');
+  const customRewardRows = [
+    { id: makeId('cr:dana-boba'), studioId: sid('dana-piano'), createdBy: uid('active-dana'), title: 'Boba tea trip', emoji: '🧋' },
+    { id: makeId('cr:dana-movie'), studioId: sid('dana-piano'), createdBy: uid('active-dana'), title: 'Movie night pick', emoji: '🎬' },
+    { id: makeId('cr:dana-park'), studioId: sid('dana-piano'), createdBy: uid('active-dana'), title: 'Park day', emoji: '🌳' },
+  ];
+  await db.insert(schema.customRewards).values(customRewardRows);
+  log(`Created ${customRewardRows.length} custom rewards.`);
+
+  const goalRows = [
+    {
+      id: makeId('goal:dana-daily'), studioId: sid('dana-piano'), createdBy: uid('active-dana'),
+      title: 'Practice every day this week', description: '7 sessions in 7 days',
+      targetDate: daysAgo(-4).toISOString().slice(0, 10),
+      rewardType: 'custom', rewardEmoji: null,
+      customRewardId: makeId('cr:dana-boba'), customRewardTitle: 'Boba tea trip',
+      completedAt: null, completedBy: null,
+    },
+    {
+      id: makeId('goal:dana-scales'), studioId: sid('dana-piano'), createdBy: uid('active-dana'),
+      title: 'Master Eb Major scale', description: '4 octaves, hands together, 120 bpm',
+      targetDate: daysAgo(-10).toISOString().slice(0, 10),
+      rewardType: 'emoji', rewardEmoji: '🏆',
+      customRewardId: null, customRewardTitle: null,
+      completedAt: null, completedBy: null,
+    },
+    {
+      id: makeId('goal:dana-done'), studioId: sid('dana-piano'), createdBy: uid('active-dana'),
+      title: 'Learn Fur Elise A section', description: 'Play from memory without mistakes',
+      targetDate: daysAgo(3).toISOString().slice(0, 10),
+      rewardType: 'emoji', rewardEmoji: '⭐',
+      customRewardId: null, customRewardTitle: null,
+      completedAt: daysAgo(2), completedBy: uid('active-dana'),
+    },
+  ];
+  await db.insert(schema.goals).values(goalRows);
+  log(`Created ${goalRows.length} goals.`);
+
+  // -----------------------------------------------------------------------
+  // 9. Mastered items (Dana: 4)
   // -----------------------------------------------------------------------
   log('Creating mastered items...');
   const masteredRows = [
@@ -545,7 +625,7 @@ async function main() {
   // Done
   // -----------------------------------------------------------------------
   log('Seed complete!');
-  log(`Summary: ${userRows.length} users, ${studioRows.length} studios, ${membershipRows.length} memberships, ${allCharts.length} charts, ${allItems.length} items, ${allSessions.length} sessions, ${allCheckoffs.length} checkoffs, ${masteredRows.length} mastered items`);
+  log(`Summary: ${userRows.length} users, ${studioRows.length} studios, ${membershipRows.length} memberships, ${allCharts.length} charts, ${allItems.length} items, ${allSessions.length} sessions, ${allCheckoffs.length} checkoffs, ${sessionRewardRows.length} rewards, ${goalRows.length} goals, ${masteredRows.length} mastered items`);
   process.exit(0);
 }
 

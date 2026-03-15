@@ -19,6 +19,7 @@ export const studios = pgTable('studios', {
   name: text('name').notNull(),
   instrument: text('instrument'),
   ownerId: uuid('owner_id').notNull().references(() => users.id),
+  rewardCategories: jsonb('reward_categories').notNull().default('["animals","music","food"]'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
@@ -79,6 +80,41 @@ export const performanceRecordings = pgTable('performance_recordings', {
   title: text('title').notNull(),
   notes: text('notes'),
   recordedAt: timestamp('recorded_at').defaultNow().notNull(),
+});
+
+export const sessionRewards = pgTable('session_rewards', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  sessionId: uuid('session_id').notNull().references(() => practiceSessions.id, { onDelete: 'cascade' }),
+  studioId: uuid('studio_id').notNull().references(() => studios.id, { onDelete: 'cascade' }),
+  userId: uuid('user_id').notNull().references(() => users.id),
+  emoji: text('emoji').notNull(),
+  category: text('category').notNull(),
+  earnedAt: timestamp('earned_at').defaultNow().notNull(),
+});
+
+export const customRewards = pgTable('custom_rewards', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  studioId: uuid('studio_id').notNull().references(() => studios.id, { onDelete: 'cascade' }),
+  createdBy: uuid('created_by').notNull().references(() => users.id),
+  title: text('title').notNull(),
+  emoji: text('emoji'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+export const goals = pgTable('goals', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  studioId: uuid('studio_id').notNull().references(() => studios.id, { onDelete: 'cascade' }),
+  createdBy: uuid('created_by').notNull().references(() => users.id),
+  title: text('title').notNull(),
+  description: text('description'),
+  targetDate: date('target_date'),
+  rewardType: text('reward_type').notNull().default('emoji'),
+  rewardEmoji: text('reward_emoji'),
+  customRewardId: uuid('custom_reward_id').references(() => customRewards.id),
+  customRewardTitle: text('custom_reward_title'),
+  completedAt: timestamp('completed_at'),
+  completedBy: uuid('completed_by').references(() => users.id),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
 export const masteredItems = pgTable('mastered_items', {

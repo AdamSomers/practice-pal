@@ -7,6 +7,8 @@ import { studiosRouter } from './routes/studios.js';
 import { chartsRouter } from './routes/charts.js';
 import { sessionsRouter } from './routes/sessions.js';
 import { progressRouter } from './routes/progress.js';
+import { rewardsRouter } from './routes/rewards.js';
+import { goalsRouter } from './routes/goals.js';
 import { requireAuth } from './middleware/auth.js';
 
 const app = express();
@@ -27,5 +29,7 @@ app.use('/api/studios', requireAuth, studiosRouter);
 app.use('/api/charts', requireAuth, chartsRouter);
 app.use('/api/sessions', requireAuth, sessionsRouter);
 app.use('/api/progress', requireAuth, progressRouter);
+app.use('/api/rewards', requireAuth, rewardsRouter);
+app.use('/api/goals', requireAuth, goalsRouter);
 
 export { app };

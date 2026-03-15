@@ -99,6 +99,33 @@ progressRouter.get('/studios/:studioId/sessions', async (req, res) => {
   }
 });
 
+// Rewards for a studio
+progressRouter.get('/studios/:studioId/rewards', async (req, res) => {
+  try {
+    const userId = req.session.userId!;
+    const { studioId } = req.params;
+
+    const membership = await verifyMembership(userId, studioId);
+    if (!membership) {
+      res.status(403).json({ error: 'Not a member of this studio' });
+      return;
+    }
+
+    const rewards = await db.select()
+      .from(schema.sessionRewards)
+      .where(and(
+        eq(schema.sessionRewards.studioId, studioId),
+        eq(schema.sessionRewards.userId, userId)
+      ))
+      .orderBy(desc(schema.sessionRewards.earnedAt));
+
+    res.json(rewards);
+  } catch (err) {
+    console.error('rewards error:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // Mastery log for a studio
 progressRouter.get('/studios/:studioId/mastery', async (req, res) => {
   try {

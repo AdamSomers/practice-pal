@@ -13,6 +13,9 @@ import type {
   StudioRole,
   ChartCategory,
   ChartItemConfig,
+  SessionReward,
+  CustomReward,
+  Goal,
 } from './types';
 
 class ApiError extends Error {
@@ -65,7 +68,7 @@ export const createStudio = (data: { name: string; instrument?: string }) =>
 
 export const getStudio = (id: string) => api.get<Studio>(`/studios/${id}`);
 
-export const updateStudio = (id: string, data: { name?: string; instrument?: string }) =>
+export const updateStudio = (id: string, data: { name?: string; instrument?: string; rewardCategories?: string[] }) =>
   api.patch<Studio>(`/studios/${id}`, data);
 
 export const deleteStudio = (id: string) =>
@@ -162,5 +165,53 @@ export const addMasteredItem = (
   studioId: string,
   data: { category: ChartCategory; description: string; masteredAt: string }
 ) => api.post<MasteredItem>(`/progress/studios/${studioId}/mastery`, data);
+
+// Session Rewards
+export const claimSessionReward = (sessionId: string) =>
+  api.post<SessionReward>(`/sessions/${sessionId}/reward`);
+
+export const getSessionRewards = (studioId: string) =>
+  api.get<SessionReward[]>(`/progress/studios/${studioId}/rewards`);
+
+// Custom Rewards
+export const getCustomRewards = (studioId: string) =>
+  api.get<CustomReward[]>(`/rewards?studioId=${studioId}`);
+
+export const createCustomReward = (data: { studioId: string; title: string; emoji?: string }) =>
+  api.post<CustomReward>('/rewards', data);
+
+export const deleteCustomReward = (id: string) =>
+  api.delete<{ success: boolean }>(`/rewards/${id}`);
+
+// Goals
+export const getGoals = (studioId: string, status?: 'active' | 'completed' | 'all') =>
+  api.get<Goal[]>(`/goals?studioId=${studioId}${status ? `&status=${status}` : ''}`);
+
+export const createGoal = (data: {
+  studioId: string;
+  title: string;
+  description?: string;
+  targetDate?: string;
+  rewardType?: 'emoji' | 'custom';
+  rewardEmoji?: string;
+  customRewardId?: string;
+  customRewardTitle?: string;
+}) => api.post<Goal>('/goals', data);
+
+export const updateGoal = (id: string, data: Partial<{
+  title: string;
+  description: string;
+  targetDate: string;
+  rewardType: 'emoji' | 'custom';
+  rewardEmoji: string;
+  customRewardId: string;
+  customRewardTitle: string;
+}>) => api.patch<Goal>(`/goals/${id}`, data);
+
+export const completeGoal = (id: string) =>
+  api.post<Goal>(`/goals/${id}/complete`);
+
+export const deleteGoal = (id: string) =>
+  api.delete<{ success: boolean }>(`/goals/${id}`);
 
 export { api, ApiError };

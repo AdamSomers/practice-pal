@@ -117,9 +117,9 @@ export default function SessionComplete({
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           onClick={onDone}
-          className="w-full px-6 py-4 bg-primary-600 text-white rounded-2xl font-extrabold text-lg shadow-lg hover:bg-primary-700 transition-colors"
+          className="w-full px-6 py-4 bg-warm-500 text-white rounded-2xl font-extrabold text-lg shadow-lg hover:bg-warm-600 transition-colors"
         >
-          Done
+          See Your Reward!
         </motion.button>
       </motion.div>
     </motion.div>

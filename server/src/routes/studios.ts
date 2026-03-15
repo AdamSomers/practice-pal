@@ -144,10 +144,11 @@ studiosRouter.patch('/:id', async (req, res) => {
       return;
     }
 
-    const { name, instrument } = req.body;
+    const { name, instrument, rewardCategories } = req.body;
     const updates: Record<string, unknown> = {};
     if (name !== undefined) updates.name = name;
     if (instrument !== undefined) updates.instrument = instrument;
+    if (rewardCategories !== undefined) updates.rewardCategories = rewardCategories;
 
     const [studio] = await db.update(schema.studios)
       .set(updates)

@@ -21,6 +21,9 @@ import {
 } from '../lib/api';
 import type { Studio, Member, StudioRole } from '../lib/types';
 import { useAuthStore } from '../stores/auth';
+import { defaultCategories } from '../lib/rewardEmojis';
+import RewardCategoryPicker from '../components/rewards/RewardCategoryPicker';
+import RewardsLibrary from '../components/rewards/RewardsLibrary';
 
 export default function StudioSettingsPage() {
   const { id } = useParams<{ id: string }>();
@@ -30,6 +33,7 @@ export default function StudioSettingsPage() {
   const [members, setMembers] = useState<Member[]>([]);
   const [name, setName] = useState('');
   const [instrument, setInstrument] = useState('');
+  const [rewardCats, setRewardCats] = useState<string[]>(defaultCategories);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [showInvite, setShowInvite] = useState(false);
@@ -49,6 +53,7 @@ export default function StudioSettingsPage() {
         setStudio(studioData);
         setName(studioData.name);
         setInstrument(studioData.instrument || '');
+        setRewardCats((studioData.rewardCategories as string[]) || defaultCategories);
         setMembers(membersData);
       } catch (err) {
         console.error('Failed to load settings:', err);
@@ -65,6 +70,7 @@ export default function StudioSettingsPage() {
       const updated = await updateStudio(id, {
         name: name.trim(),
         instrument: instrument.trim() || undefined,
+        rewardCategories: rewardCats,
       });
       setStudio(updated);
     } catch (err) {
@@ -178,6 +184,29 @@ export default function StudioSettingsPage() {
           <Save className="w-4 h-4" />
           {saving ? 'Saving...' : 'Save Changes'}
         </button>
+      </section>
+
+      {/* Reward Preferences */}
+      <section className="bg-white rounded-2xl shadow-md border border-gray-100 p-6 space-y-4">
+        <h2 className="text-lg font-bold text-gray-800">Reward Preferences</h2>
+        <p className="text-sm text-gray-500">
+          Choose which emoji categories your student can earn after each practice session.
+        </p>
+        <RewardCategoryPicker selected={rewardCats} onChange={setRewardCats} />
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          className="flex items-center gap-2 px-5 py-2.5 bg-primary-600 text-white rounded-xl font-semibold hover:bg-primary-700 disabled:opacity-50 transition-colors"
+        >
+          <Save className="w-4 h-4" />
+          {saving ? 'Saving...' : 'Save Changes'}
+        </button>
+      </section>
+
+      {/* Custom Rewards Library */}
+      <section className="bg-white rounded-2xl shadow-md border border-gray-100 p-6 space-y-4">
+        <h2 className="text-lg font-bold text-gray-800">Rewards Library</h2>
+        <RewardsLibrary studioId={id!} />
       </section>
 
       {/* Members */}

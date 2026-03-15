@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Clock, Flame, BarChart3, History, Award } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { ArrowLeft, Clock, Flame, BarChart3, History, Award, Plus, ChevronDown } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   BarChart,
   Bar,
@@ -11,25 +11,40 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts';
-import { getProgress, getStudio } from '../lib/api';
-import type { ProgressStats, Studio } from '../lib/types';
+import { getProgress, getStudio, getSessionRewards, getGoals, createGoal, completeGoal, deleteGoal } from '../lib/api';
+import type { ProgressStats, Studio, SessionReward, Goal } from '../lib/types';
+import RewardGrid from '../components/rewards/RewardGrid';
+import GoalCard from '../components/goals/GoalCard';
+import GoalForm from '../components/goals/GoalForm';
+import GoalRewardReveal from '../components/goals/GoalRewardReveal';
 
 export default function ProgressPage() {
   const { id } = useParams<{ id: string }>();
   const [studio, setStudio] = useState<Studio | null>(null);
   const [stats, setStats] = useState<ProgressStats | null>(null);
+  const [rewards, setRewards] = useState<SessionReward[]>([]);
+  const [goals, setGoals] = useState<Goal[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showGoalForm, setShowGoalForm] = useState(false);
+  const [showCompletedGoals, setShowCompletedGoals] = useState(false);
+  const [celebratingGoal, setCelebratingGoal] = useState<Goal | null>(null);
+
+  const canEdit = studio?.role === 'owner' || studio?.role === 'editor';
 
   useEffect(() => {
     if (!id) return;
     (async () => {
       try {
-        const [studioData, progressData] = await Promise.all([
+        const [studioData, progressData, rewardsData, goalsData] = await Promise.all([
           getStudio(id),
           getProgress(id).catch(() => null),
+          getSessionRewards(id).catch(() => []),
+          getGoals(id).catch(() => []),
         ]);
         setStudio(studioData);
         setStats(progressData);
+        setRewards(rewardsData);
+        setGoals(goalsData);
       } catch (err) {
         console.error('Failed to load progress:', err);
       } finally {
@@ -173,6 +188,140 @@ export default function ProgressPage() {
           </ResponsiveContainer>
         </div>
       </motion.div>
+
+      {/* My Rewards */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+        className="bg-white rounded-2xl shadow-md border border-gray-100 p-5"
+      >
+        <h2 className="text-lg font-bold text-gray-800 mb-3">My Rewards</h2>
+        <RewardGrid rewards={rewards} />
+      </motion.div>
+
+      {/* Goals */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.25 }}
+        className="bg-white rounded-2xl shadow-md border border-gray-100 p-5 space-y-3"
+      >
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-bold text-gray-800">Goals</h2>
+          {canEdit && (
+            <button
+              onClick={() => setShowGoalForm(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-primary-100 text-primary-700 rounded-lg text-sm font-semibold hover:bg-primary-200 transition-colors"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              Add Goal
+            </button>
+          )}
+        </div>
+
+        {(() => {
+          const activeGoals = goals.filter(g => !g.completedAt);
+          const completedGoals = goals.filter(g => g.completedAt);
+
+          return (
+            <>
+              {activeGoals.length === 0 && (
+                <p className="text-sm text-gray-400 text-center py-3">
+                  {canEdit ? 'Set a goal to motivate practice!' : 'No active goals yet.'}
+                </p>
+              )}
+              <div className="space-y-2">
+                {activeGoals.map(goal => (
+                  <GoalCard
+                    key={goal.id}
+                    goal={goal}
+                    canEdit={canEdit}
+                    onComplete={async (goalId) => {
+                      try {
+                        const updated = await completeGoal(goalId);
+                        setGoals(prev => prev.map(g => g.id === goalId ? updated : g));
+                        setCelebratingGoal(updated);
+                      } catch (err) {
+                        console.error('Failed to complete goal:', err);
+                      }
+                    }}
+                    onDelete={async (goalId) => {
+                      try {
+                        await deleteGoal(goalId);
+                        setGoals(prev => prev.filter(g => g.id !== goalId));
+                      } catch (err) {
+                        console.error('Failed to delete goal:', err);
+                      }
+                    }}
+                  />
+                ))}
+              </div>
+
+              {completedGoals.length > 0 && (
+                <div>
+                  <button
+                    onClick={() => setShowCompletedGoals(!showCompletedGoals)}
+                    className="flex items-center gap-1.5 text-sm font-semibold text-gray-400 hover:text-gray-600 transition-colors"
+                  >
+                    <ChevronDown className={`w-4 h-4 transition-transform ${showCompletedGoals ? 'rotate-180' : ''}`} />
+                    {completedGoals.length} completed
+                  </button>
+                  <AnimatePresence>
+                    {showCompletedGoals && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        className="overflow-hidden space-y-2 mt-2"
+                      >
+                        {completedGoals.map(goal => (
+                          <GoalCard
+                            key={goal.id}
+                            goal={goal}
+                            canEdit={false}
+                            onComplete={() => {}}
+                            onDelete={() => {}}
+                          />
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              )}
+            </>
+          );
+        })()}
+      </motion.div>
+
+      {/* Goal form modal */}
+      <AnimatePresence>
+        {showGoalForm && id && (
+          <GoalForm
+            studioId={id}
+            onSubmit={async (data) => {
+              try {
+                const goal = await createGoal({ ...data, studioId: id });
+                setGoals(prev => [goal, ...prev]);
+                setShowGoalForm(false);
+              } catch (err) {
+                console.error('Failed to create goal:', err);
+              }
+            }}
+            onClose={() => setShowGoalForm(false)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Goal reward celebration */}
+      <AnimatePresence>
+        {celebratingGoal && (
+          <GoalRewardReveal
+            goal={celebratingGoal}
+            onDismiss={() => setCelebratingGoal(null)}
+          />
+        )}
+      </AnimatePresence>
 
       {/* Quick links */}
       <div className="grid grid-cols-2 gap-3">

@@ -8,13 +8,16 @@ import {
   checkoffItem,
   uncheckItem,
   completeSession,
+  claimSessionReward,
 } from '../lib/api';
+import type { SessionReward } from '../lib/types';
 import type { ChartItem, PracticeChart, PracticeSession, SessionCheckoff } from '../lib/types';
 import { initAudio } from '../lib/sounds';
 import TimerBar from '../components/session/TimerBar';
 import CheckboxGrid from '../components/session/CheckboxGrid';
 import ProgressIndicator from '../components/session/ProgressIndicator';
 import SessionComplete from '../components/session/SessionComplete';
+import RewardReveal from '../components/rewards/RewardReveal';
 import Metronome from '../components/session/Metronome';
 
 interface CheckState {
@@ -34,6 +37,8 @@ export default function SessionPlayerPage() {
   const [isComplete, setIsComplete] = useState(false);
   const [elapsed, setElapsed] = useState(0);
   const [showMetronome, setShowMetronome] = useState(false);
+  const [reward, setReward] = useState<SessionReward | null>(null);
+  const [phase, setPhase] = useState<'playing' | 'celebration' | 'reward'>('playing');
   const audioInitRef = useRef(false);
 
   // Load chart and start session
@@ -127,10 +132,18 @@ export default function SessionPlayerPage() {
     try {
       await completeSession(session.id, elapsed);
       setIsComplete(true);
+      setPhase('celebration');
+      // Claim reward in background
+      try {
+        const r = await claimSessionReward(session.id);
+        setReward(r);
+      } catch {
+        // Reward claim failed, still show celebration
+      }
     } catch (err) {
       console.error('Failed to complete session:', err);
-      // Still show completion
       setIsComplete(true);
+      setPhase('celebration');
     }
   }, [session, elapsed]);
 
@@ -183,12 +196,29 @@ export default function SessionPlayerPage() {
     const itemsCompleted = chart.items.filter(
       (item) => (checkState[item.id]?.size ?? 0) === item.repetitions
     ).length;
+
+    if (phase === 'reward' && reward) {
+      return (
+        <RewardReveal
+          emoji={reward.emoji}
+          category={reward.category}
+          onCollect={() => navigate(`/studios/${chart.studioId}`)}
+        />
+      );
+    }
+
     return (
       <SessionComplete
         durationSeconds={elapsed}
         itemsCompleted={itemsCompleted}
         totalItems={chart.items.length}
-        onDone={() => navigate(`/studios/${chart.studioId}`)}
+        onDone={() => {
+          if (reward) {
+            setPhase('reward');
+          } else {
+            navigate(`/studios/${chart.studioId}`);
+          }
+        }}
       />
     );
   }
