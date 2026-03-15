@@ -5,6 +5,7 @@ import { useAuthStore } from '../stores/auth';
 import { motion } from 'framer-motion';
 
 const TEST_ACCOUNTS = [
+  { id: 'adam', label: 'Adam', desc: 'Ada Piano' },
   { id: 'blank-alice', label: 'Alice', desc: 'Blank slate' },
   { id: 'blank-bob', label: 'Bob', desc: 'Blank slate' },
   { id: 'one-chart-carol', label: 'Carol', desc: 'One chart' },

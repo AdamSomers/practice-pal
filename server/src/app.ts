@@ -1,4 +1,5 @@
 import 'dotenv/config';
+import path from 'path';
 import express from 'express';
 import cors from 'cors';
 import session from 'express-session';
@@ -11,15 +12,26 @@ import { rewardsRouter } from './routes/rewards.js';
 import { goalsRouter } from './routes/goals.js';
 import { requireAuth } from './middleware/auth.js';
 
+const isProd = process.env.APP_ENV === 'production';
+
 const app = express();
 
-app.use(cors({ origin: 'http://localhost:5173', credentials: true }));
+if (!isProd) {
+  app.use(cors({ origin: 'http://localhost:5174', credentials: true }));
+}
+
+app.set('trust proxy', 1);
 app.use(express.json());
 app.use(session({
   secret: process.env.SESSION_SECRET || 'dev-secret',
   resave: false,
   saveUninitialized: false,
-  cookie: { secure: false, httpOnly: true, maxAge: 7 * 24 * 60 * 60 * 1000 }
+  cookie: {
+    secure: isProd,
+    httpOnly: true,
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+    sameSite: 'lax',
+  }
 }));
 
 app.get('/api/health', (_req, res) => res.json({ status: 'ok' }));
@@ -31,5 +43,13 @@ app.use('/api/sessions', requireAuth, sessionsRouter);
 app.use('/api/progress', requireAuth, progressRouter);
 app.use('/api/rewards', requireAuth, rewardsRouter);
 app.use('/api/goals', requireAuth, goalsRouter);
+
+if (isProd) {
+  const clientDist = path.join(import.meta.dirname, '../../client/dist');
+  app.use(express.static(clientDist));
+  app.get('*', (_req, res) => {
+    res.sendFile(path.join(clientDist, 'index.html'));
+  });
+}
 
 export { app };
