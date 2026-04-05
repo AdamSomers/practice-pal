@@ -52,6 +52,28 @@ interface CheckboxGridProps {
   onUncheck: (repetitionNumber: number) => void;
 }
 
+/** Calculate total checkboxes for an item, accounting for sections mode */
+export function getTotalCheckboxes(config: ChartItemConfig, repetitions: number): number {
+  if (config.practiceMode === 'sections' && config.sectionCount && config.sectionsRepsEach) {
+    return config.sectionCount * config.sectionsRepsEach;
+  }
+  return repetitions;
+}
+
+/** Get all expected repetition numbers for an item */
+export function getExpectedRepNumbers(config: ChartItemConfig, repetitions: number): number[] {
+  if (config.practiceMode === 'sections' && config.sectionCount && config.sectionsRepsEach) {
+    const nums: number[] = [];
+    for (let s = 0; s < config.sectionCount; s++) {
+      for (let r = 1; r <= config.sectionsRepsEach; r++) {
+        nums.push(s * 100 + r);
+      }
+    }
+    return nums;
+  }
+  return Array.from({ length: repetitions }, (_, i) => i + 1);
+}
+
 export default function CheckboxGrid({
   itemId,
   category,
@@ -63,7 +85,9 @@ export default function CheckboxGrid({
 }: CheckboxGridProps) {
   const label = getItemLabel(category, config);
   const catInfo = CATEGORIES.find((c) => c.key === category);
-  const allChecked = checked.size === repetitions;
+  const isSectionsMode = config.practiceMode === 'sections' && config.sectionCount && config.sectionsRepsEach;
+  const totalCheckboxes = getTotalCheckboxes(config, repetitions);
+  const allChecked = checked.size === totalCheckboxes;
 
   const handleToggle = (repNum: number) => {
     if (checked.has(repNum)) {
@@ -116,46 +140,109 @@ export default function CheckboxGrid({
       </div>
 
       {/* Checkboxes */}
-      <div className="flex flex-wrap gap-2">
-        {Array.from({ length: repetitions }, (_, i) => i + 1).map((repNum) => {
-          const isChecked = checked.has(repNum);
+      {isSectionsMode ? (
+        <div className="space-y-3">
+          {Array.from({ length: config.sectionCount! }, (_, sIdx) => {
+            const sectionLabel = config.sectionLabels?.[sIdx] || `Section ${sIdx + 1}`;
+            const sectionRepNums = Array.from(
+              { length: config.sectionsRepsEach! },
+              (_, r) => sIdx * 100 + (r + 1)
+            );
+            const sectionComplete = sectionRepNums.every((n) => checked.has(n));
 
-          return (
-            <motion.button
-              key={repNum}
-              whileTap={{ scale: 0.85 }}
-              onClick={() => handleToggle(repNum)}
-              className={`relative w-11 h-11 rounded-xl border-2 flex items-center justify-center transition-all ${
-                isChecked
-                  ? 'bg-primary-600 border-primary-600 text-white shadow-sm'
-                  : 'bg-white border-gray-200 text-gray-400 hover:border-primary-300 hover:text-primary-400'
-              }`}
-            >
-              {isChecked ? (
-                <motion.div
-                  initial={{ scale: 0, rotate: -45 }}
-                  animate={{ scale: 1, rotate: 0 }}
-                  transition={{ type: 'spring', stiffness: 400, damping: 15 }}
+            return (
+              <div key={sIdx}>
+                <p
+                  className={`text-xs font-semibold mb-1.5 ${
+                    sectionComplete ? 'text-teal-600' : 'text-gray-500'
+                  }`}
                 >
-                  <Check className="w-5 h-5" />
-                </motion.div>
-              ) : (
-                <span className="text-xs font-bold">{repNum}</span>
-              )}
+                  {sectionLabel}
+                  {sectionComplete && ' \u2713'}
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {sectionRepNums.map((repNum, rIdx) => {
+                    const isChecked = checked.has(repNum);
+                    return (
+                      <motion.button
+                        key={repNum}
+                        whileTap={{ scale: 0.85 }}
+                        onClick={() => handleToggle(repNum)}
+                        className={`relative w-11 h-11 rounded-xl border-2 flex items-center justify-center transition-all ${
+                          isChecked
+                            ? 'bg-primary-600 border-primary-600 text-white shadow-sm'
+                            : 'bg-white border-gray-200 text-gray-400 hover:border-primary-300 hover:text-primary-400'
+                        }`}
+                      >
+                        {isChecked ? (
+                          <motion.div
+                            initial={{ scale: 0, rotate: -45 }}
+                            animate={{ scale: 1, rotate: 0 }}
+                            transition={{ type: 'spring', stiffness: 400, damping: 15 }}
+                          >
+                            <Check className="w-5 h-5" />
+                          </motion.div>
+                        ) : (
+                          <span className="text-xs font-bold">{rIdx + 1}</span>
+                        )}
+                        {isChecked && (
+                          <motion.div
+                            initial={{ scale: 0.5, opacity: 1 }}
+                            animate={{ scale: 2.5, opacity: 0 }}
+                            transition={{ duration: 0.4 }}
+                            className="absolute inset-0 rounded-xl border-2 border-primary-400 pointer-events-none"
+                          />
+                        )}
+                      </motion.button>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        <div className="flex flex-wrap gap-2">
+          {Array.from({ length: repetitions }, (_, i) => i + 1).map((repNum) => {
+            const isChecked = checked.has(repNum);
 
-              {/* Sparkle burst */}
-              {isChecked && (
-                <motion.div
-                  initial={{ scale: 0.5, opacity: 1 }}
-                  animate={{ scale: 2.5, opacity: 0 }}
-                  transition={{ duration: 0.4 }}
-                  className="absolute inset-0 rounded-xl border-2 border-primary-400 pointer-events-none"
-                />
-              )}
-            </motion.button>
-          );
-        })}
-      </div>
+            return (
+              <motion.button
+                key={repNum}
+                whileTap={{ scale: 0.85 }}
+                onClick={() => handleToggle(repNum)}
+                className={`relative w-11 h-11 rounded-xl border-2 flex items-center justify-center transition-all ${
+                  isChecked
+                    ? 'bg-primary-600 border-primary-600 text-white shadow-sm'
+                    : 'bg-white border-gray-200 text-gray-400 hover:border-primary-300 hover:text-primary-400'
+                }`}
+              >
+                {isChecked ? (
+                  <motion.div
+                    initial={{ scale: 0, rotate: -45 }}
+                    animate={{ scale: 1, rotate: 0 }}
+                    transition={{ type: 'spring', stiffness: 400, damping: 15 }}
+                  >
+                    <Check className="w-5 h-5" />
+                  </motion.div>
+                ) : (
+                  <span className="text-xs font-bold">{repNum}</span>
+                )}
+
+                {/* Sparkle burst */}
+                {isChecked && (
+                  <motion.div
+                    initial={{ scale: 0.5, opacity: 1 }}
+                    animate={{ scale: 2.5, opacity: 0 }}
+                    transition={{ duration: 0.4 }}
+                    className="absolute inset-0 rounded-xl border-2 border-primary-400 pointer-events-none"
+                  />
+                )}
+              </motion.button>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
