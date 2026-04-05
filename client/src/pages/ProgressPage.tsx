@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Clock, Flame, BarChart3, History, Award, Plus, ChevronDown } from 'lucide-react';
+import { ArrowLeft, Clock, Flame, BarChart3, History, Plus, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   BarChart,
@@ -11,12 +11,14 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts';
-import { getProgress, getStudio, getSessionRewards, getGoals, createGoal, completeGoal, deleteGoal } from '../lib/api';
+import { getProgress, getStudio, updateStudio, getSessionRewards, getGoals, createGoal, completeGoal, deleteGoal } from '../lib/api';
 import type { ProgressStats, Studio, SessionReward, Goal } from '../lib/types';
 import RewardGrid from '../components/rewards/RewardGrid';
 import GoalCard from '../components/goals/GoalCard';
 import GoalForm from '../components/goals/GoalForm';
 import GoalRewardReveal from '../components/goals/GoalRewardReveal';
+import RewardsLibrary from '../components/rewards/RewardsLibrary';
+import RewardCategoryPicker from '../components/rewards/RewardCategoryPicker';
 
 export default function ProgressPage() {
   const { id } = useParams<{ id: string }>();
@@ -323,33 +325,51 @@ export default function ProgressPage() {
         )}
       </AnimatePresence>
 
+      {/* Reward Settings */}
+      {canEdit && id && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="bg-white rounded-2xl shadow-md border border-gray-100 p-5 space-y-5"
+        >
+          <div>
+            <h2 className="text-lg font-bold text-gray-800 mb-1">Reward Settings</h2>
+            <p className="text-sm text-gray-500">
+              Choose which emoji categories your student can earn after each practice session.
+            </p>
+          </div>
+          <RewardCategoryPicker
+            selected={(studio?.rewardCategories as string[]) || ['animals', 'music', 'food']}
+            onChange={async (cats) => {
+              try {
+                const updated = await updateStudio(id, { rewardCategories: cats });
+                setStudio(updated);
+              } catch (err) {
+                console.error('Failed to update reward categories:', err);
+              }
+            }}
+          />
+          <div className="pt-3 border-t border-gray-100">
+            <h3 className="text-sm font-bold text-gray-700 mb-2">Custom Rewards</h3>
+            <RewardsLibrary studioId={id} />
+          </div>
+        </motion.div>
+      )}
+
       {/* Quick links */}
-      <div className="grid grid-cols-2 gap-3">
-        <Link
-          to={`/studios/${id}/sessions`}
-          className="flex items-center gap-3 bg-white rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-md transition-shadow"
-        >
-          <div className="w-10 h-10 rounded-xl bg-primary-100 flex items-center justify-center">
-            <History className="w-5 h-5 text-primary-600" />
-          </div>
-          <div>
-            <p className="font-bold text-gray-800 text-sm">Session History</p>
-            <p className="text-xs text-gray-400">View all sessions</p>
-          </div>
-        </Link>
-        <Link
-          to={`/studios/${id}`}
-          className="flex items-center gap-3 bg-white rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-md transition-shadow"
-        >
-          <div className="w-10 h-10 rounded-xl bg-warm-100 flex items-center justify-center">
-            <Award className="w-5 h-5 text-warm-500" />
-          </div>
-          <div>
-            <p className="font-bold text-gray-800 text-sm">Mastery Log</p>
-            <p className="text-xs text-gray-400">View mastered items</p>
-          </div>
-        </Link>
-      </div>
+      <Link
+        to={`/studios/${id}/sessions`}
+        className="flex items-center gap-3 bg-white rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-md transition-shadow"
+      >
+        <div className="w-10 h-10 rounded-xl bg-primary-100 flex items-center justify-center">
+          <History className="w-5 h-5 text-primary-600" />
+        </div>
+        <div>
+          <p className="font-bold text-gray-800 text-sm">Session History</p>
+          <p className="text-xs text-gray-400">View all sessions</p>
+        </div>
+      </Link>
     </div>
   );
 }

@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { X } from 'lucide-react';
+import { X, Plus } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { goalRewardEmojis } from '../../lib/rewardEmojis';
-import { getCustomRewards } from '../../lib/api';
+import { getCustomRewards, createCustomReward } from '../../lib/api';
 import type { CustomReward } from '../../lib/types';
 
 interface GoalFormProps {
@@ -27,6 +27,8 @@ export default function GoalForm({ studioId, onSubmit, onClose }: GoalFormProps)
   const [rewardEmoji, setRewardEmoji] = useState(goalRewardEmojis[0]);
   const [customRewards, setCustomRewards] = useState<CustomReward[]>([]);
   const [selectedCustomReward, setSelectedCustomReward] = useState<string>('');
+  const [showNewReward, setShowNewReward] = useState(false);
+  const [newRewardTitle, setNewRewardTitle] = useState('');
 
   useEffect(() => {
     getCustomRewards(studioId).then(setCustomRewards).catch(console.error);
@@ -157,15 +159,14 @@ export default function GoalForm({ studioId, onSubmit, onClose }: GoalFormProps)
               ))}
             </div>
           ) : (
-            <div>
-              {customRewards.length === 0 ? (
-                <p className="text-sm text-gray-400">
-                  No custom rewards. Add some in Studio Settings first.
-                </p>
-              ) : (
+            <div className="space-y-3">
+              {customRewards.length > 0 && (
                 <select
                   value={selectedCustomReward}
-                  onChange={(e) => setSelectedCustomReward(e.target.value)}
+                  onChange={(e) => {
+                    setSelectedCustomReward(e.target.value);
+                    setShowNewReward(false);
+                  }}
                   className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-400"
                 >
                   <option value="">Select a reward...</option>
@@ -175,6 +176,64 @@ export default function GoalForm({ studioId, onSubmit, onClose }: GoalFormProps)
                     </option>
                   ))}
                 </select>
+              )}
+
+              {!showNewReward ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowNewReward(true);
+                    setSelectedCustomReward('');
+                  }}
+                  className="flex items-center gap-1.5 text-sm font-semibold text-primary-600 hover:text-primary-700 transition-colors"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  Create new reward
+                </button>
+              ) : (
+                <div className="space-y-2 p-3 bg-gray-50 rounded-xl border border-gray-200">
+                  <input
+                    type="text"
+                    value={newRewardTitle}
+                    onChange={(e) => setNewRewardTitle(e.target.value)}
+                    placeholder="Reward name, e.g. Ice cream trip"
+                    className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-400"
+                    autoFocus
+                  />
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowNewReward(false);
+                        setNewRewardTitle('');
+                      }}
+                      className="px-3 py-1.5 text-sm font-semibold text-gray-500 bg-white border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      disabled={!newRewardTitle.trim()}
+                      onClick={async () => {
+                        try {
+                          const cr = await createCustomReward({
+                            studioId,
+                            title: newRewardTitle.trim(),
+                          });
+                          setCustomRewards(prev => [...prev, cr]);
+                          setSelectedCustomReward(cr.id);
+                          setShowNewReward(false);
+                          setNewRewardTitle('');
+                        } catch (err) {
+                          console.error('Failed to create reward:', err);
+                        }
+                      }}
+                      className="px-3 py-1.5 text-sm font-semibold text-white bg-primary-600 rounded-lg hover:bg-primary-700 disabled:opacity-50 transition-colors"
+                    >
+                      Add
+                    </button>
+                  </div>
+                </div>
               )}
             </div>
           )}

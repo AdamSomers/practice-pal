@@ -85,9 +85,17 @@ export default function PieceCombobox({
           type="text"
           value={piece}
           onChange={(e) => {
-            onPieceChange(e.target.value);
+            const val = e.target.value;
+            onPieceChange(val);
             setShowDropdown(true);
             setHighlightIndex(-1);
+            // Auto-populate composer if typed piece matches a known piece exactly
+            const match = knownPieces.find(
+              (p) => p.piece.toLowerCase() === val.trim().toLowerCase()
+            );
+            if (match && match.composer) {
+              onComposerChange(match.composer);
+            }
           }}
           onFocus={() => setShowDropdown(true)}
           onKeyDown={handleKeyDown}

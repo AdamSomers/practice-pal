@@ -1,5 +1,5 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
-import { Home, Music, BarChart3, User, LogOut, Settings, FileText } from 'lucide-react';
+import { Home, Music, User, LogOut, Info } from 'lucide-react';
 import { useAuthStore } from '../stores/auth';
 import { motion } from 'framer-motion';
 
@@ -36,12 +36,7 @@ export default function Layout() {
           />
         </nav>
 
-        <div className="p-4 border-t border-primary-100 space-y-2">
-          <SidebarLink
-            to="/release-notes"
-            icon={<FileText className="w-5 h-5" />}
-            label="Release Notes"
-          />
+        <div className="p-4 border-t border-primary-100">
           {user && (
             <div className="flex items-center gap-3 mb-3 px-3">
               <div className="w-8 h-8 rounded-full bg-primary-200 flex items-center justify-center text-primary-700 font-bold text-sm">
@@ -52,13 +47,22 @@ export default function Layout() {
               </span>
             </div>
           )}
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-3 px-3 py-2 w-full text-sm text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors"
-          >
-            <LogOut className="w-4 h-4" />
-            Sign out
-          </button>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => navigate('/about')}
+              className="flex items-center gap-3 px-3 py-2 flex-1 text-sm text-gray-500 hover:text-primary-600 hover:bg-primary-50 rounded-xl transition-colors"
+            >
+              <Info className="w-4 h-4" />
+              About
+            </button>
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-3 px-3 py-2 flex-1 text-sm text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors"
+            >
+              <LogOut className="w-4 h-4" />
+              Sign out
+            </button>
+          </div>
         </div>
       </aside>
 
@@ -70,13 +74,22 @@ export default function Layout() {
           </div>
           <span className="text-lg font-extrabold text-primary-800">PracticePal</span>
         </NavLink>
-        <button
-          onClick={handleLogout}
-          className="p-2 text-gray-400 hover:text-red-500 transition-colors"
-          title="Sign out"
-        >
-          <LogOut className="w-5 h-5" />
-        </button>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => navigate('/about')}
+            className="p-2 text-gray-400 hover:text-primary-600 transition-colors"
+            title="About"
+          >
+            <Info className="w-5 h-5" />
+          </button>
+          <button
+            onClick={handleLogout}
+            className="p-2 text-gray-400 hover:text-red-500 transition-colors"
+            title="Sign out"
+          >
+            <LogOut className="w-5 h-5" />
+          </button>
+        </div>
       </header>
 
       {/* Main content */}
@@ -94,8 +107,6 @@ export default function Layout() {
       {/* Mobile bottom tab bar */}
       <nav className="lg:hidden fixed bottom-0 inset-x-0 h-16 bg-white border-t border-primary-100 flex items-center justify-around z-30 shadow-[0_-2px_10px_rgba(0,0,0,0.05)]">
         <TabLink to="/" icon={<Home className="w-5 h-5" />} label="Home" />
-        <TabLink to="/practice" icon={<Music className="w-5 h-5" />} label="Practice" />
-        <TabLink to="/progress" icon={<BarChart3 className="w-5 h-5" />} label="Progress" />
         <TabLink to="/profile" icon={<User className="w-5 h-5" />} label="Profile" />
       </nav>
     </div>

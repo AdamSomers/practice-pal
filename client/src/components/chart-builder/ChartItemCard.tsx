@@ -1,5 +1,6 @@
+import { useState } from 'react';
 import { Pencil, Trash2, GripVertical, Copy } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import type { ChartCategory, ChartItemConfig } from '../../lib/types';
 import { CATEGORIES } from './CategoryPicker';
 
@@ -49,6 +50,7 @@ export default function ChartItemCard({
   onDuplicate,
   dragHandleProps,
 }: ChartItemCardProps) {
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const catInfo = CATEGORIES.find((c) => c.key === category);
   const label = getItemLabel(category, config);
 
@@ -58,8 +60,9 @@ export default function ChartItemCard({
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, x: -20 }}
-      className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex items-center gap-3 group"
+      className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 space-y-0 group"
     >
+      <div className="flex items-center gap-3">
       {/* Drag handle */}
       <div
         {...dragHandleProps}
@@ -150,13 +153,43 @@ export default function ChartItemCard({
           </button>
         )}
         <button
-          onClick={onDelete}
+          onClick={() => setConfirmDelete(true)}
           className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
           title="Delete"
         >
           <Trash2 className="w-4 h-4" />
         </button>
       </div>
+      </div>
+
+      <AnimatePresence>
+        {confirmDelete && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="overflow-hidden"
+          >
+            <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
+              <p className="text-sm text-red-600 font-medium">Delete this item?</p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setConfirmDelete(false)}
+                  className="px-3 py-1.5 text-sm font-semibold text-gray-500 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={onDelete}
+                  className="px-3 py-1.5 text-sm font-semibold text-white bg-red-500 rounded-lg hover:bg-red-600 transition-colors"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }

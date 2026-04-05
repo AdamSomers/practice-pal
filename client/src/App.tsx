@@ -10,7 +10,7 @@ import ChartBuilderPage from './pages/ChartBuilderPage';
 import SessionPlayerPage from './pages/SessionPlayerPage';
 import ProgressPage from './pages/ProgressPage';
 import SessionHistoryPage from './pages/SessionHistoryPage';
-import ReleaseNotesPage from './pages/ReleaseNotesPage';
+import AboutPage from './pages/AboutPage';
 import PrintableChartPage from './pages/PrintableChartPage';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -60,10 +60,8 @@ export default function App() {
         <Route path="/charts/:id/practice" element={<SessionPlayerPage />} />
         <Route path="/studios/:id/progress" element={<ProgressPage />} />
         <Route path="/studios/:id/sessions" element={<SessionHistoryPage />} />
-        <Route path="/release-notes" element={<ReleaseNotesPage />} />
+        <Route path="/about" element={<AboutPage />} />
         {/* Fallback routes for mobile tab bar */}
-        <Route path="/practice" element={<DashboardPage />} />
-        <Route path="/progress" element={<DashboardPage />} />
         <Route path="/profile" element={<ProfilePlaceholder />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />

@@ -87,8 +87,6 @@ export default function StudioPage() {
   const tabs: { key: Tab; label: string; icon: React.ReactNode }[] = [
     { key: 'charts', label: 'Charts', icon: <FileText className="w-4 h-4" /> },
     { key: 'progress', label: 'Goals & Progress', icon: <BarChart3 className="w-4 h-4" /> },
-    { key: 'members', label: 'Members', icon: <Users className="w-4 h-4" /> },
-    { key: 'mastery', label: 'Mastery', icon: <Award className="w-4 h-4" /> },
   ];
 
   return (
@@ -152,12 +150,6 @@ export default function StudioPage() {
             setCharts={setCharts}
             navigate={navigate}
           />
-        )}
-        {activeTab === 'members' && (
-          <MembersTab key="members" members={members} />
-        )}
-        {activeTab === 'mastery' && (
-          <MasteryTab key="mastery" mastered={mastered} />
         )}
       </AnimatePresence>
     </div>
@@ -235,9 +227,9 @@ function ChartsTab({
               transition={{ delay: i * 0.04 }}
               className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 group"
             >
-              <div className="flex items-center justify-between">
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-bold text-gray-800 truncate">{chart.title}</h3>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div className="min-w-0">
+                  <h3 className="font-bold text-gray-800 sm:truncate">{chart.title}</h3>
                   <div className="flex items-center gap-3 mt-1 text-xs text-gray-400">
                     <span className="flex items-center gap-1">
                       <Clock className="w-3 h-3" />
@@ -250,7 +242,7 @@ function ChartsTab({
                     <span>{chart.minimumPracticeMinutes ? `${chart.minimumPracticeMinutes} min` : 'No min'}</span>
                   </div>
                 </div>
-                <div className="flex items-center gap-1 ml-3">
+                <div className="flex items-center gap-1 shrink-0">
                   <button
                     onClick={(e) => {
                       e.stopPropagation();

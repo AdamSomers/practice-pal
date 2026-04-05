@@ -89,8 +89,8 @@ export default function ItemForm({
           {/* Category-specific fields */}
           {renderCategoryFields(category, config, update, studioId)}
 
-          {/* Repetitions - common to all */}
-          <div>
+          {/* Repetitions - hidden when repertoire is in sections mode */}
+          {!(category === 'repertoire' && config.practiceMode === 'sections') && <div>
             <label className="block text-sm font-semibold text-gray-700 mb-1.5">
               Repetitions
             </label>
@@ -136,7 +136,7 @@ export default function ItemForm({
                 <option value="custom">More...</option>
               </select>
             )}
-          </div>
+          </div>}
 
           {/* Modifiers */}
           <ModifierSelector
@@ -322,25 +322,6 @@ function renderCategoryFields(
             onPieceChange={(v) => update('piece', v)}
             onComposerChange={(v) => update('composer', v)}
           />
-          <TextInput
-            label="Movement / Section"
-            value={config.movement || ''}
-            onChange={(v) => update('movement', v)}
-            placeholder="e.g., 1st Movement"
-          />
-          <TextInput
-            label="Measures"
-            value={config.measures || ''}
-            onChange={(v) => update('measures', v)}
-            placeholder="e.g., 1-32"
-          />
-          <TextInput
-            label="BPM (optional)"
-            value={config.bpm?.toString() || ''}
-            onChange={(v) => update('bpm', v ? Number(v) : undefined)}
-            type="number"
-            placeholder="e.g., 120"
-          />
 
           {/* Practice mode */}
           <div>
@@ -394,11 +375,18 @@ function renderCategoryFields(
                     type="number"
                     min={1}
                     max={20}
-                    value={config.sectionCount || 3}
+                    value={config.sectionCount ?? ''}
                     onChange={(e) => {
-                      const count = Math.max(1, Math.min(20, Number(e.target.value)));
+                      const raw = e.target.value;
+                      if (raw === '') {
+                        update('sectionCount', undefined);
+                      } else {
+                        update('sectionCount', Math.min(20, Number(raw)));
+                      }
+                    }}
+                    onBlur={() => {
+                      const count = Math.max(1, Math.min(20, Number(config.sectionCount) || 3));
                       update('sectionCount', count);
-                      // Trim labels if count decreased
                       if (config.sectionLabels && config.sectionLabels.length > count) {
                         update('sectionLabels', config.sectionLabels.slice(0, count));
                       }
@@ -414,10 +402,18 @@ function renderCategoryFields(
                     type="number"
                     min={1}
                     max={10}
-                    value={config.sectionsRepsEach || 3}
-                    onChange={(e) =>
-                      update('sectionsRepsEach', Math.max(1, Math.min(10, Number(e.target.value))))
-                    }
+                    value={config.sectionsRepsEach ?? ''}
+                    onChange={(e) => {
+                      const raw = e.target.value;
+                      if (raw === '') {
+                        update('sectionsRepsEach', undefined);
+                      } else {
+                        update('sectionsRepsEach', Math.min(10, Number(raw)));
+                      }
+                    }}
+                    onBlur={() => {
+                      update('sectionsRepsEach', Math.max(1, Math.min(10, Number(config.sectionsRepsEach) || 3)));
+                    }}
                     className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-400 transition"
                   />
                 </div>
@@ -428,7 +424,7 @@ function renderCategoryFields(
                   Section Labels <span className="font-normal text-gray-400">(optional)</span>
                 </label>
                 <div className="space-y-2">
-                  {Array.from({ length: config.sectionCount || 3 }, (_, i) => (
+                  {Array.from({ length: Number(config.sectionCount) || 3 }, (_, i) => (
                     <input
                       key={i}
                       type="text"
@@ -446,6 +442,20 @@ function renderCategoryFields(
               </div>
             </div>
           )}
+
+          <TextInput
+            label="Movement"
+            value={config.movement || ''}
+            onChange={(v) => update('movement', v)}
+            placeholder="e.g., 1st Movement"
+          />
+          <TextInput
+            label="BPM (optional)"
+            value={config.bpm?.toString() || ''}
+            onChange={(v) => update('bpm', v ? Number(v) : undefined)}
+            type="number"
+            placeholder="e.g., 120"
+          />
         </>
       );
 

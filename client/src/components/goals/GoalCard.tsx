@@ -1,5 +1,6 @@
+import { useState } from 'react';
 import { Calendar, Check, Trash2 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import type { Goal } from '../../lib/types';
 
 interface GoalCardProps {
@@ -10,6 +11,7 @@ interface GoalCardProps {
 }
 
 export default function GoalCard({ goal, canEdit, onComplete, onDelete }: GoalCardProps) {
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const isCompleted = !!goal.completedAt;
   const rewardDisplay = goal.rewardType === 'emoji'
     ? goal.rewardEmoji || '🏆'
@@ -59,7 +61,7 @@ export default function GoalCard({ goal, canEdit, onComplete, onDelete }: GoalCa
               <Check className="w-4 h-4" />
             </button>
             <button
-              onClick={() => onDelete(goal.id)}
+              onClick={() => setConfirmDelete(true)}
               className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
               title="Delete"
             >
@@ -68,6 +70,35 @@ export default function GoalCard({ goal, canEdit, onComplete, onDelete }: GoalCa
           </div>
         )}
       </div>
+
+      <AnimatePresence>
+        {confirmDelete && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="overflow-hidden"
+          >
+            <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
+              <p className="text-sm text-red-600 font-medium">Delete this goal?</p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setConfirmDelete(false)}
+                  className="px-3 py-1.5 text-sm font-semibold text-gray-500 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => onDelete(goal.id)}
+                  className="px-3 py-1.5 text-sm font-semibold text-white bg-red-500 rounded-lg hover:bg-red-600 transition-colors"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }
