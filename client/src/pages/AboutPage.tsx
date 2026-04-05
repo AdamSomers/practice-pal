@@ -1,21 +1,12 @@
 import { ArrowLeft, Music } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import v010 from '../../../release-notes/v0.1.0.md?raw';
 
-const releaseNotes = import.meta.glob('/../../release-notes/*.md', {
-  query: '?raw',
-  import: 'default',
-  eager: true,
-}) as Record<string, string>;
+const sortedNotes = [
+  { version: 'v0.1.0', content: v010 },
+];
 
-// Sort by filename descending (newest first)
-const sortedNotes = Object.entries(releaseNotes)
-  .sort(([a], [b]) => b.localeCompare(a))
-  .map(([path, content]) => {
-    const filename = path.split('/').pop()?.replace('.md', '') || '';
-    return { version: filename, content };
-  });
-
-// Safe: content is from our own release-notes/*.md files imported at build time
+// Safe: content sourced from our own build-time markdown files, not user input
 function renderMarkdown(md: string): string {
   return md
     .replace(/^# .+\n*/m, '')
@@ -58,24 +49,18 @@ export default function AboutPage() {
       </div>
 
       {/* Release Notes */}
-      {sortedNotes.length > 0 ? (
-        sortedNotes.map(({ version, content }) => (
+      {sortedNotes.map(({ version, content }) => (
+        <div
+          key={version}
+          className="bg-white rounded-2xl shadow-md border border-gray-100 p-6"
+        >
+          <h2 className="text-lg font-bold text-gray-800 mb-2">{version}</h2>
+          {/* Safe: content from our own build-time markdown files */}
           <div
-            key={version}
-            className="bg-white rounded-2xl shadow-md border border-gray-100 p-6"
-          >
-            <h2 className="text-lg font-bold text-gray-800 mb-2">{version}</h2>
-            {/* Safe: content sourced from our own build-time markdown files, not user input */}
-            <div
-              dangerouslySetInnerHTML={{ __html: renderMarkdown(content) }}
-            />
-          </div>
-        ))
-      ) : (
-        <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-6 text-center py-8">
-          <p className="text-gray-500 font-medium">No releases yet</p>
+            dangerouslySetInnerHTML={{ __html: renderMarkdown(content) }}
+          />
         </div>
-      )}
+      ))}
     </div>
   );
 }

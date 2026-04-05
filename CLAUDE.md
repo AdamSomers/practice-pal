@@ -260,6 +260,12 @@ A batch of S items merged together is a single PATCH bump. Each M item is at lea
 - List of plan files included
 - Any migration steps or breaking changes
 
+**After creating the release notes file**, add it to the About page import list in `client/src/pages/AboutPage.tsx`:
+1. Add an import: `import vXYZ from '../../../release-notes/vX.Y.Z.md?raw';`
+2. Add the entry to the `sortedNotes` array (newest first): `{ version: 'vX.Y.Z', content: vXYZ }`
+
+This must happen before deployment. Release notes are bundled at build time and displayed on the About page.
+
 ### Acceptance Review Summary
 
 When all items in a batch reach "awaiting acceptance," present Adam with a single review summary:
