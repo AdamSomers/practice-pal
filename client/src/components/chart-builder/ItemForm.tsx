@@ -315,6 +315,111 @@ function renderCategoryFields(
             type="number"
             placeholder="e.g., 120"
           />
+
+          {/* Practice mode */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+              Practice Mode
+            </label>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  update('practiceMode', 'entire');
+                  update('sectionCount', undefined);
+                  update('sectionsRepsEach', undefined);
+                  update('sectionLabels', undefined);
+                }}
+                className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-semibold border-2 transition-all ${
+                  !config.practiceMode || config.practiceMode === 'entire'
+                    ? 'border-primary-500 bg-primary-50 text-primary-700'
+                    : 'border-gray-200 bg-gray-50 text-gray-500 hover:border-gray-300'
+                }`}
+              >
+                Entire piece
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  update('practiceMode', 'sections');
+                  if (!config.sectionCount) update('sectionCount', 3);
+                  if (!config.sectionsRepsEach) update('sectionsRepsEach', 3);
+                }}
+                className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-semibold border-2 transition-all ${
+                  config.practiceMode === 'sections'
+                    ? 'border-primary-500 bg-primary-50 text-primary-700'
+                    : 'border-gray-200 bg-gray-50 text-gray-500 hover:border-gray-300'
+                }`}
+              >
+                Sections
+              </button>
+            </div>
+          </div>
+
+          {/* Section settings */}
+          {config.practiceMode === 'sections' && (
+            <div className="space-y-3 pl-3 border-l-2 border-primary-200">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                    How many sections?
+                  </label>
+                  <input
+                    type="number"
+                    min={1}
+                    max={20}
+                    value={config.sectionCount || 3}
+                    onChange={(e) => {
+                      const count = Math.max(1, Math.min(20, Number(e.target.value)));
+                      update('sectionCount', count);
+                      // Trim labels if count decreased
+                      if (config.sectionLabels && config.sectionLabels.length > count) {
+                        update('sectionLabels', config.sectionLabels.slice(0, count));
+                      }
+                    }}
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-400 transition"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                    Reps per section
+                  </label>
+                  <input
+                    type="number"
+                    min={1}
+                    max={10}
+                    value={config.sectionsRepsEach || 3}
+                    onChange={(e) =>
+                      update('sectionsRepsEach', Math.max(1, Math.min(10, Number(e.target.value))))
+                    }
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-400 transition"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                  Section Labels <span className="font-normal text-gray-400">(optional)</span>
+                </label>
+                <div className="space-y-2">
+                  {Array.from({ length: config.sectionCount || 3 }, (_, i) => (
+                    <input
+                      key={i}
+                      type="text"
+                      value={(config.sectionLabels || [])[i] || ''}
+                      onChange={(e) => {
+                        const labels = [...(config.sectionLabels || [])];
+                        labels[i] = e.target.value;
+                        update('sectionLabels', labels);
+                      }}
+                      placeholder={`Section ${i + 1}`}
+                      className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 transition"
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
         </>
       );
 

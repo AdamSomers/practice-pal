@@ -14,7 +14,7 @@ import type { SessionReward } from '../lib/types';
 import type { ChartItem, PracticeChart, PracticeSession, SessionCheckoff } from '../lib/types';
 import { initAudio } from '../lib/sounds';
 import TimerBar from '../components/session/TimerBar';
-import CheckboxGrid from '../components/session/CheckboxGrid';
+import CheckboxGrid, { getTotalCheckboxes } from '../components/session/CheckboxGrid';
 import ProgressIndicator from '../components/session/ProgressIndicator';
 import SessionComplete from '../components/session/SessionComplete';
 import RewardReveal from '../components/rewards/RewardReveal';
@@ -147,9 +147,9 @@ export default function SessionPlayerPage() {
     }
   }, [session, elapsed]);
 
-  // Calculate progress
+  // Calculate progress (accounts for sections mode)
   const totalCheckboxes = chart
-    ? chart.items.reduce((sum, item) => sum + item.repetitions, 0)
+    ? chart.items.reduce((sum, item) => sum + getTotalCheckboxes(item.config, item.repetitions), 0)
     : 0;
   const checkedCount = Object.values(checkState).reduce(
     (sum, map) => sum + map.size,
@@ -157,11 +157,12 @@ export default function SessionPlayerPage() {
   );
   const percentage = totalCheckboxes > 0 ? (checkedCount / totalCheckboxes) * 100 : 0;
 
-  // Check if all items are complete
+  // Check if all items are complete (accounts for sections mode)
   const allComplete =
-    chart?.items.every(
-      (item) => (checkState[item.id]?.size ?? 0) === item.repetitions
-    ) ?? false;
+    chart?.items.every((item) => {
+      const expected = getTotalCheckboxes(item.config, item.repetitions);
+      return (checkState[item.id]?.size ?? 0) === expected;
+    }) ?? false;
 
   // Auto-complete when everything is done and timer met
   useEffect(() => {
@@ -194,7 +195,7 @@ export default function SessionPlayerPage() {
 
   if (isComplete) {
     const itemsCompleted = chart.items.filter(
-      (item) => (checkState[item.id]?.size ?? 0) === item.repetitions
+      (item) => (checkState[item.id]?.size ?? 0) === getTotalCheckboxes(item.config, item.repetitions)
     ).length;
 
     if (phase === 'reward' && reward) {

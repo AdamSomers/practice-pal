@@ -55,6 +55,10 @@ export interface ChartItemConfig {
   movement?: string;
   measures?: string;
   description?: string;
+  practiceMode?: 'entire' | 'sections';
+  sectionCount?: number;
+  sectionsRepsEach?: number;
+  sectionLabels?: string[];
   [key: string]: unknown;
 }
 

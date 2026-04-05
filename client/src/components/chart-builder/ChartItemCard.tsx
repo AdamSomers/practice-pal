@@ -80,6 +80,12 @@ export default function ChartItemCard({
         <p className="font-semibold text-gray-800 truncate capitalize">{label}</p>
         <div className="flex items-center gap-2 mt-0.5 text-xs text-gray-400 flex-wrap">
           <span>{repetitions}x</span>
+          {category === 'repertoire' && config.practiceMode === 'sections' && config.sectionCount && config.sectionsRepsEach && (
+            <>
+              <span className="text-gray-300">|</span>
+              <span>{config.sectionCount} sections &times; {config.sectionsRepsEach} reps</span>
+            </>
+          )}
           {category === 'repertoire' && config.movement && (
             <>
               <span className="text-gray-300">|</span>
