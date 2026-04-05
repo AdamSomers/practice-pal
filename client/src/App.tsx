@@ -11,6 +11,7 @@ import SessionPlayerPage from './pages/SessionPlayerPage';
 import ProgressPage from './pages/ProgressPage';
 import SessionHistoryPage from './pages/SessionHistoryPage';
 import ReleaseNotesPage from './pages/ReleaseNotesPage';
+import PrintableChartPage from './pages/PrintableChartPage';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuthStore();
@@ -55,6 +56,7 @@ export default function App() {
         <Route path="/studios/:id/settings" element={<StudioSettingsPage />} />
         <Route path="/studios/:id/charts/new" element={<ChartBuilderPage />} />
         <Route path="/charts/:id/edit" element={<ChartBuilderPage />} />
+        <Route path="/charts/:id/print" element={<PrintableChartPage />} />
         <Route path="/charts/:id/practice" element={<SessionPlayerPage />} />
         <Route path="/studios/:id/progress" element={<ProgressPage />} />
         <Route path="/studios/:id/sessions" element={<SessionHistoryPage />} />

@@ -1,65 +1,43 @@
-# Printable Chart Format
+# Printable Chart
 
-**Status:** intake
+**Status:** awaiting-acceptance
 **Size:** M
 **Branch:** feature/printable-chart
 
 ## Requirements
 
-Each chart on the Charts tab should have a printer icon. Clicking it renders a printable representation of the practice view: items with their details and empty checkboxes. This lets teachers print charts for students who practice without a device.
+Teachers need a way to print practice charts for students. Each chart on the Charts tab gets a printer icon; clicking opens a print-friendly view at `/charts/:id/print` with a clean layout optimized for paper.
 
 ## Assumptions
-- Print view opens in a new browser tab or as a print-friendly overlay
-- Uses browser's native print dialog (window.print())
-- Layout is optimized for standard letter/A4 paper
-- No server-side rendering needed. Client-only feature.
-- Chart title, date, and studio name appear in the header
-- Each item shows: category icon/label, item title, all config details, empty checkbox grid
+
+- Print view is read-only, no interactive elements beyond Print and Back buttons
+- Checkbox grid renders empty bordered squares (not interactive checkboxes) for handwritten checkmarks
+- The print route lives inside the ProtectedRoute/Layout wrapper (requires auth)
+- Category-specific config fields are rendered as detail lines beneath each item label
 
 ## Build Plan
 
-### New Component: PrintableChart
-- `client/src/pages/PrintableChartPage.tsx` — Route: `/charts/:id/print`
-- Fetches chart data via existing API (GET /charts/:id)
-- Renders clean, print-optimized layout:
-  - Header: chart title, studio name, date
-  - Items list: category label, item details, checkbox grid (empty boxes)
-  - Footer: "PracticePal" branding
+### Files created
+- `client/src/pages/PrintableChartPage.tsx` — New page component
 
-### Print Styles
-- Add `@media print` styles to hide nav, show only chart content
-- Clean typography, adequate spacing for handwritten checkmarks
-- Checkbox grid rendered as bordered squares
-
-### Integration Points
-- **StudioPage ChartsTab**: Add printer icon button to each chart card
-- **ChartBuilderPage**: Optionally add print button in header
-- **React Router**: Add route for `/charts/:id/print`
-
-### Item Detail Rendering
-- Reuse or extract item detail display logic from SessionPlayerPage
-- Each category shows its relevant config fields:
-  - Scales: key, type, BPM, modifiers
-  - Arpeggios: key, type, BPM, modifiers
-  - Cadences: key, type, modifiers
-  - Repertoire: piece, composer, movement, measures, BPM
-  - Sight reading: description, key
-  - Theory: label, description
-  - Other: label, description
-- Notes field shown if present
+### Files modified
+- `client/src/App.tsx` — Add route for `/charts/:id/print`
+- `client/src/pages/StudioPage.tsx` — Add printer icon button to chart cards in ChartsTab
 
 ## Test Plan
 
 ### Acceptance Tests
-- [ ] Click printer icon on a chart card. New tab opens with printable view.
-- [ ] Verify all items display with correct details and empty checkboxes.
-- [ ] Use browser print dialog. Verify clean output on paper/PDF.
-- [ ] Verify nav elements are hidden in print view.
-- [ ] Test with a chart that has items from multiple categories.
-
-### Automated E2E Tests
-- Navigate to print page, verify all chart items render
-- Verify checkbox count matches item repetitions
+- [ ] Printer icon appears on chart cards in the Charts tab
+- [ ] Clicking printer icon navigates to `/charts/:id/print`
+- [ ] Print page shows chart title, date, and all items with config details
+- [ ] Each item shows empty checkbox squares matching its repetition count
+- [ ] Print button triggers browser print dialog
+- [ ] Back button returns to previous page
+- [ ] `@media print` hides buttons and app chrome, shows only chart content
+- [ ] Layout is clean and readable on paper (no colored backgrounds, adequate spacing)
 
 ## Notes
-- This feature pairs well with the repertoire sections feature. If sections are implemented first, the printable view should show section-grouped checkboxes.
+
+- Uses `getItemLabel` from `ChartItemCard.tsx` for consistent item naming
+- Uses `CATEGORIES` from `CategoryPicker.tsx` for category labels
+- Print CSS uses `@media print` in a `<style>` tag within the component
