@@ -11,6 +11,7 @@ import {
   Clock,
   LayoutGrid,
   Pencil,
+  Printer,
   FileText,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -231,6 +232,16 @@ function ChartsTab({
                   >
                     <Play className="w-3.5 h-3.5" />
                     Practice
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(`/charts/${chart.id}/print`);
+                    }}
+                    className="p-2 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+                    title="Print chart"
+                  >
+                    <Printer className="w-4 h-4" />
                   </button>
                   <button
                     onClick={(e) => {
