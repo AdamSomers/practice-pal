@@ -12,6 +12,8 @@ import {
   LayoutGrid,
   Pencil,
   FileText,
+  Copy,
+  Trash2,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -19,6 +21,8 @@ import {
   getCharts,
   getMembers,
   getMasteredItems,
+  deleteChart,
+  duplicateChart,
 } from '../lib/api';
 import type {
   Studio,
@@ -81,7 +85,7 @@ export default function StudioPage() {
 
   const tabs: { key: Tab; label: string; icon: React.ReactNode }[] = [
     { key: 'charts', label: 'Charts', icon: <FileText className="w-4 h-4" /> },
-    { key: 'progress', label: 'Progress', icon: <BarChart3 className="w-4 h-4" /> },
+    { key: 'progress', label: 'Goals & Progress', icon: <BarChart3 className="w-4 h-4" /> },
     { key: 'members', label: 'Members', icon: <Users className="w-4 h-4" /> },
     { key: 'mastery', label: 'Mastery', icon: <Award className="w-4 h-4" /> },
   ];
@@ -144,6 +148,7 @@ export default function StudioPage() {
             key="charts"
             studioId={id!}
             charts={charts}
+            setCharts={setCharts}
             navigate={navigate}
           />
         )}
@@ -161,15 +166,38 @@ export default function StudioPage() {
 function ChartsTab({
   studioId,
   charts,
+  setCharts,
   navigate,
 }: {
   studioId: string;
   charts: PracticeChart[];
+  setCharts: React.Dispatch<React.SetStateAction<PracticeChart[]>>;
   navigate: ReturnType<typeof useNavigate>;
 }) {
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const sortedCharts = [...charts].sort(
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   );
+
+  const handleDuplicate = async (chartId: string) => {
+    try {
+      const copy = await duplicateChart(chartId);
+      setCharts((prev) => [copy, ...prev]);
+      navigate(`/charts/${copy.id}/edit`);
+    } catch (err) {
+      console.error('Failed to duplicate chart:', err);
+    }
+  };
+
+  const handleDelete = async (chartId: string) => {
+    try {
+      await deleteChart(chartId);
+      setCharts((prev) => prev.filter((c) => c.id !== chartId));
+      setConfirmDelete(null);
+    } catch (err) {
+      console.error('Failed to delete chart:', err);
+    }
+  };
 
   return (
     <motion.div
@@ -221,7 +249,7 @@ function ChartsTab({
                     <span>{chart.minimumPracticeMinutes ? `${chart.minimumPracticeMinutes} min` : 'No min'}</span>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 ml-3">
+                <div className="flex items-center gap-1 ml-3">
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
@@ -238,11 +266,68 @@ function ChartsTab({
                       navigate(`/charts/${chart.id}/edit`);
                     }}
                     className="p-2 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+                    title="Edit"
                   >
                     <Pencil className="w-4 h-4" />
                   </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDuplicate(chart.id);
+                    }}
+                    className="p-2 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+                    title="Duplicate"
+                  >
+                    <Copy className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setConfirmDelete(chart.id);
+                    }}
+                    className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                    title="Delete"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
                 </div>
               </div>
+
+              {/* Delete confirmation */}
+              <AnimatePresence>
+                {confirmDelete === chart.id && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
+                      <p className="text-sm text-red-600 font-medium">Delete this chart?</p>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setConfirmDelete(null);
+                          }}
+                          className="px-3 py-1.5 text-sm font-semibold text-gray-500 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDelete(chart.id);
+                          }}
+                          className="px-3 py-1.5 text-sm font-semibold text-white bg-red-500 rounded-lg hover:bg-red-600 transition-colors"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </motion.div>
           ))}
         </div>

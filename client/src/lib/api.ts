@@ -37,6 +37,10 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 
   if (!res.ok) {
     const body = await res.json().catch(() => ({ error: res.statusText }));
+    // On 401, redirect to login (session expired or lost)
+    if (res.status === 401 && !path.startsWith('/auth/')) {
+      window.location.href = '/login';
+    }
     throw new ApiError(res.status, body.error || res.statusText);
   }
 
@@ -130,6 +134,9 @@ export const updateChart = (
 
 export const deleteChart = (chartId: string) =>
   api.delete<{ success: boolean }>(`/charts/${chartId}`);
+
+export const duplicateChart = (chartId: string) =>
+  api.post<PracticeChart>(`/charts/${chartId}/duplicate`);
 
 export const getRepertoirePieces = (studioId: string) =>
   api.get<RepertoirePiece[]>(`/charts/repertoire-pieces?studioId=${studioId}`);

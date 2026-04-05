@@ -152,6 +152,21 @@ export default function ChartBuilderPage() {
     );
   };
 
+  const handleDuplicateItem = (localId: string) => {
+    setItems((prev) => {
+      const source = prev.find((i) => i.localId === localId);
+      if (!source) return prev;
+      const copy: LocalChartItem = {
+        ...source,
+        localId: generateLocalId(),
+        id: undefined,
+        sortOrder: prev.length,
+        config: { ...source.config },
+      };
+      return [...prev, copy];
+    });
+  };
+
   const handleSave = async () => {
     if (!title.trim() || items.length === 0) return;
     setSaving(true);
@@ -284,6 +299,7 @@ export default function ChartBuilderPage() {
                             })
                           }
                           onDelete={() => handleDeleteItem(item.localId)}
+                          onDuplicate={() => handleDuplicateItem(item.localId)}
                           dragHandleProps={dragHandleProps}
                         />
                       )}

@@ -8,23 +8,37 @@ import { CATEGORIES } from '../chart-builder/CategoryPicker';
 function getItemDetails(category: ChartCategory, config: ChartItemConfig): string {
   const parts: string[] = [];
   switch (category) {
+    case 'scales':
+    case 'arpeggios':
+      if (config.key) parts.push(config.key);
+      if (config.type === 'other' && config.customType) {
+        parts.push(config.customType as string);
+      } else if (config.type) {
+        parts.push(config.type.replace(/_/g, ' '));
+      }
+      if (config.bpm) parts.push(`${config.bpm} BPM`);
+      break;
+    case 'cadences':
+      if (config.key) parts.push(config.key);
+      if (config.keyType) parts.push(config.keyType as string);
+      if (config.type) parts.push(config.type);
+      break;
     case 'repertoire':
+      if (config.composer) parts.push(config.composer);
       if (config.movement) parts.push(config.movement);
       if (config.measures) parts.push(`mm. ${config.measures}`);
       if (config.bpm) parts.push(`${config.bpm} BPM`);
       break;
-    case 'scales':
-    case 'arpeggios':
-      if (config.bpm) parts.push(`${config.bpm} BPM`);
-      break;
     case 'sight_reading':
       if (config.key) parts.push(config.key);
+      if (config.description) parts.push(config.description);
       break;
-    default:
-      if (config.bpm) parts.push(`${config.bpm} BPM`);
+    case 'theory':
+    case 'other':
       if (config.description) parts.push(config.description);
       break;
   }
+  if (config.notes) parts.push(config.notes);
   return parts.join(' \u00B7 ');
 }
 

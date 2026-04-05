@@ -1,4 +1,4 @@
-import { Pencil, Trash2, GripVertical } from 'lucide-react';
+import { Pencil, Trash2, GripVertical, Copy } from 'lucide-react';
 import { motion } from 'framer-motion';
 import type { ChartCategory, ChartItemConfig } from '../../lib/types';
 import { CATEGORIES } from './CategoryPicker';
@@ -9,21 +9,22 @@ interface ChartItemCardProps {
   repetitions: number;
   onEdit: () => void;
   onDelete: () => void;
+  onDuplicate?: () => void;
   dragHandleProps?: Record<string, unknown>;
 }
 
 function getItemLabel(category: ChartCategory, config: ChartItemConfig): string {
   switch (category) {
-    case 'scales':
-      return [config.key, config.type?.replace(/_/g, ' '), 'scale']
-        .filter(Boolean)
-        .join(' ');
+    case 'scales': {
+      const scaleType = config.type === 'other' ? (config.customType as string) : config.type?.replace(/_/g, ' ');
+      return [config.key, scaleType, 'scale'].filter(Boolean).join(' ');
+    }
     case 'arpeggios':
       return [config.key, config.type?.replace(/_/g, ' '), 'arpeggio']
         .filter(Boolean)
         .join(' ');
     case 'cadences':
-      return [config.key, config.type, 'cadence'].filter(Boolean).join(' ');
+      return [config.key, config.keyType, config.type, 'cadence'].filter(Boolean).join(' ');
     case 'repertoire':
       return [config.piece, config.composer ? `(${config.composer})` : '']
         .filter(Boolean)
@@ -45,6 +46,7 @@ export default function ChartItemCard({
   repetitions,
   onEdit,
   onDelete,
+  onDuplicate,
   dragHandleProps,
 }: ChartItemCardProps) {
   const catInfo = CATEGORIES.find((c) => c.key === category);
@@ -128,12 +130,23 @@ export default function ChartItemCard({
         <button
           onClick={onEdit}
           className="p-2 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+          title="Edit"
         >
           <Pencil className="w-4 h-4" />
         </button>
+        {onDuplicate && (
+          <button
+            onClick={onDuplicate}
+            className="p-2 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+            title="Duplicate"
+          >
+            <Copy className="w-4 h-4" />
+          </button>
+        )}
         <button
           onClick={onDelete}
           className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+          title="Delete"
         >
           <Trash2 className="w-4 h-4" />
         </button>

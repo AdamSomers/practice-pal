@@ -88,7 +88,7 @@ export default function ProgressPage() {
         Back to {studio?.name || 'studio'}
       </Link>
 
-      <h1 className="text-2xl font-extrabold text-gray-800">Progress</h1>
+      <h1 className="text-2xl font-extrabold text-gray-800">Goals & Progress</h1>
 
       {/* Stats cards */}
       <div className="grid grid-cols-3 gap-3">

@@ -200,7 +200,10 @@ function renderCategoryFields(
             </label>
             <select
               value={config.type || ''}
-              onChange={(e) => update('type', e.target.value)}
+              onChange={(e) => {
+                update('type', e.target.value);
+                if (e.target.value !== 'other') update('customType', undefined);
+              }}
               className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-400 transition"
             >
               <option value="">Select type...</option>
@@ -212,8 +215,17 @@ function renderCategoryFields(
               <option value="pentatonic">Pentatonic</option>
               <option value="blues">Blues</option>
               <option value="whole_tone">Whole Tone</option>
+              <option value="other">Other...</option>
             </select>
           </div>
+          {config.type === 'other' && (
+            <TextInput
+              label="Custom Scale Type"
+              value={(config.customType as string) || ''}
+              onChange={(v) => update('customType', v)}
+              placeholder="e.g., Lydian, Mixolydian"
+            />
+          )}
           <TextInput
             label="BPM (optional)"
             value={config.bpm?.toString() || ''}
@@ -267,6 +279,20 @@ function renderCategoryFields(
             value={config.key || ''}
             onChange={(k) => update('key', k)}
           />
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+              Key Type
+            </label>
+            <select
+              value={(config.keyType as string) || ''}
+              onChange={(e) => update('keyType', e.target.value)}
+              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-400 transition"
+            >
+              <option value="">Select key type...</option>
+              <option value="major">Major</option>
+              <option value="minor">Minor</option>
+            </select>
+          </div>
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-1.5">
               Cadence Type

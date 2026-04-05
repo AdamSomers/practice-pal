@@ -1,5 +1,5 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
-import { Home, Music, BarChart3, User, LogOut, Settings } from 'lucide-react';
+import { Home, Music, BarChart3, User, LogOut, Settings, FileText } from 'lucide-react';
 import { useAuthStore } from '../stores/auth';
 import { motion } from 'framer-motion';
 
@@ -36,7 +36,12 @@ export default function Layout() {
           />
         </nav>
 
-        <div className="p-4 border-t border-primary-100">
+        <div className="p-4 border-t border-primary-100 space-y-2">
+          <SidebarLink
+            to="/release-notes"
+            icon={<FileText className="w-5 h-5" />}
+            label="Release Notes"
+          />
           {user && (
             <div className="flex items-center gap-3 mb-3 px-3">
               <div className="w-8 h-8 rounded-full bg-primary-200 flex items-center justify-center text-primary-700 font-bold text-sm">
