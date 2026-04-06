@@ -37,9 +37,14 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 
   if (!res.ok) {
     const body = await res.json().catch(() => ({ error: res.statusText }));
-    // On 401, redirect to login (session expired or lost)
+    // On 401, only redirect for GET requests (page loads).
+    // For mutations (POST/PATCH/DELETE), let the error propagate so the
+    // caller can show an error without losing unsaved work.
     if (res.status === 401 && !path.startsWith('/auth/')) {
-      window.location.href = '/login';
+      const method = (options.method || 'GET').toUpperCase();
+      if (method === 'GET') {
+        window.location.href = '/login';
+      }
     }
     throw new ApiError(res.status, body.error || res.statusText);
   }

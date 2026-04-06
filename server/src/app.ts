@@ -3,6 +3,7 @@ import path from 'path';
 import express from 'express';
 import cors from 'cors';
 import session from 'express-session';
+import connectPgSimple from 'connect-pg-simple';
 import { authRouter } from './routes/auth.js';
 import { studiosRouter } from './routes/studios.js';
 import { chartsRouter } from './routes/charts.js';
@@ -22,7 +23,14 @@ if (!isProd) {
 
 app.set('trust proxy', 1);
 app.use(express.json());
+
+const PgStore = connectPgSimple(session);
+
 app.use(session({
+  store: new PgStore({
+    conString: process.env.DATABASE_URL,
+    createTableIfMissing: true,
+  }),
   secret: process.env.SESSION_SECRET || 'dev-secret',
   resave: false,
   saveUninitialized: false,
