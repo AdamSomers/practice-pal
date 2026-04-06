@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, Save } from 'lucide-react';
+import { ArrowLeft, Plus, Save, X } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   DndContext,
@@ -45,6 +45,51 @@ function getDefaultTitle(): string {
   return `Week of ${monday.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
 }
 
+interface DraftState {
+  title: string;
+  minimumMinutes: number;
+  items: LocalChartItem[];
+  studioId: string;
+  savedAt: number;
+}
+
+const DRAFT_MAX_AGE_MS = 24 * 60 * 60 * 1000;
+
+function getDraftKey(isEditing: boolean, id?: string, studioId?: string): string {
+  return isEditing && id ? `pp_chart_draft_${id}` : `pp_chart_draft_new_${studioId || 'unknown'}`;
+}
+
+function saveDraft(key: string, state: DraftState) {
+  try {
+    localStorage.setItem(key, JSON.stringify(state));
+  } catch {
+    // localStorage full or unavailable
+  }
+}
+
+function loadDraft(key: string): DraftState | null {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return null;
+    const draft: DraftState = JSON.parse(raw);
+    if (Date.now() - draft.savedAt > DRAFT_MAX_AGE_MS) {
+      localStorage.removeItem(key);
+      return null;
+    }
+    return draft;
+  } catch {
+    return null;
+  }
+}
+
+function clearDraft(key: string) {
+  try {
+    localStorage.removeItem(key);
+  } catch {
+    // ignore
+  }
+}
+
 export default function ChartBuilderPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -59,6 +104,9 @@ export default function ChartBuilderPage() {
   const [studioId, setStudioId] = useState(studioIdFromUrl || '');
   const [loading, setLoading] = useState(isEditing);
   const [saving, setSaving] = useState(false);
+  const [restoredDraft, setRestoredDraft] = useState(false);
+  const draftKeyRef = useRef(getDraftKey(isEditing, id, studioIdFromUrl || ''));
+  const initialLoadDone = useRef(false);
 
   // Modal state
   const [showCategoryPicker, setShowCategoryPicker] = useState(false);
@@ -76,34 +124,72 @@ export default function ChartBuilderPage() {
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
-  // Load existing chart
+  // Load existing chart, then check for draft
   useEffect(() => {
-    if (!isEditing || !id) return;
+    if (!isEditing || !id) {
+      // New chart: check for draft immediately
+      const draft = loadDraft(draftKeyRef.current);
+      if (draft && draft.items.length > 0) {
+        setTitle(draft.title);
+        setMinimumMinutes(draft.minimumMinutes);
+        setItems(draft.items);
+        if (draft.studioId) setStudioId(draft.studioId);
+        setRestoredDraft(true);
+      }
+      initialLoadDone.current = true;
+      return;
+    }
     (async () => {
       try {
         const chart = await getChart(id);
-        setTitle(chart.title);
-        setMinimumMinutes(chart.minimumPracticeMinutes);
-        setStudioId(chart.studioId);
-        setItems(
-          (chart.items || [])
-            .sort((a, b) => a.sortOrder - b.sortOrder)
-            .map((item) => ({
-              localId: generateLocalId(),
-              id: item.id,
-              category: item.category,
-              sortOrder: item.sortOrder,
-              config: item.config,
-              repetitions: item.repetitions,
-            }))
-        );
+        const draftKey = getDraftKey(true, id);
+        draftKeyRef.current = draftKey;
+
+        // Check if draft exists and is newer than the chart
+        const draft = loadDraft(draftKey);
+        if (draft && draft.items.length > 0) {
+          setTitle(draft.title);
+          setMinimumMinutes(draft.minimumMinutes);
+          setStudioId(draft.studioId || chart.studioId);
+          setItems(draft.items);
+          setRestoredDraft(true);
+        } else {
+          setTitle(chart.title);
+          setMinimumMinutes(chart.minimumPracticeMinutes);
+          setStudioId(chart.studioId);
+          setItems(
+            (chart.items || [])
+              .sort((a, b) => a.sortOrder - b.sortOrder)
+              .map((item) => ({
+                localId: generateLocalId(),
+                id: item.id,
+                category: item.category,
+                sortOrder: item.sortOrder,
+                config: item.config,
+                repetitions: item.repetitions,
+              }))
+          );
+        }
       } catch (err) {
         console.error('Failed to load chart:', err);
       } finally {
         setLoading(false);
+        initialLoadDone.current = true;
       }
     })();
   }, [id, isEditing]);
+
+  // Auto-save draft on every change
+  useEffect(() => {
+    if (!initialLoadDone.current) return;
+    saveDraft(draftKeyRef.current, {
+      title,
+      minimumMinutes,
+      items,
+      studioId,
+      savedAt: Date.now(),
+    });
+  }, [title, minimumMinutes, items, studioId]);
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
@@ -185,9 +271,11 @@ export default function ChartBuilderPage() {
 
       if (isEditing && id) {
         await updateChart(id, payload);
+        clearDraft(draftKeyRef.current);
         navigate(`/studios/${studioId}`);
       } else if (studioId) {
         await createChart(studioId, payload);
+        clearDraft(draftKeyRef.current);
         navigate(`/studios/${studioId}`);
       }
     } catch (err) {
@@ -219,6 +307,26 @@ export default function ChartBuilderPage() {
       <h1 className="text-2xl font-extrabold text-gray-800">
         {isEditing ? 'Edit Chart' : 'New Practice Chart'}
       </h1>
+
+      {/* Restored draft banner */}
+      <AnimatePresence>
+        {restoredDraft && (
+          <motion.div
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            className="flex items-center justify-between px-4 py-2.5 bg-warm-100 border border-warm-200 rounded-xl"
+          >
+            <p className="text-sm font-medium text-warm-600">Restored unsaved changes</p>
+            <button
+              onClick={() => setRestoredDraft(false)}
+              className="p-1 text-warm-400 hover:text-warm-600 transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Title */}
       <div>
