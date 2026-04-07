@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, Save, X } from 'lucide-react';
+import { ArrowLeft, Plus, Save } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   DndContext,
@@ -104,7 +104,7 @@ export default function ChartBuilderPage() {
   const [studioId, setStudioId] = useState(studioIdFromUrl || '');
   const [loading, setLoading] = useState(isEditing);
   const [saving, setSaving] = useState(false);
-  const [restoredDraft, setRestoredDraft] = useState(false);
+  const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   const draftKeyRef = useRef(getDraftKey(isEditing, id, studioIdFromUrl || ''));
   const initialLoadDone = useRef(false);
   const userModified = useRef(false);
@@ -135,7 +135,7 @@ export default function ChartBuilderPage() {
         setMinimumMinutes(draft.minimumMinutes);
         setItems(draft.items);
         if (draft.studioId) setStudioId(draft.studioId);
-        setRestoredDraft(true);
+        userModified.current = true; // Draft restored = treat as modified
       }
       initialLoadDone.current = true;
       return;
@@ -153,7 +153,7 @@ export default function ChartBuilderPage() {
           setMinimumMinutes(draft.minimumMinutes);
           setStudioId(draft.studioId || chart.studioId);
           setItems(draft.items);
-          setRestoredDraft(true);
+          userModified.current = true; // Draft restored = treat as modified
         } else {
           setTitle(chart.title);
           setMinimumMinutes(chart.minimumPracticeMinutes);
@@ -191,6 +191,32 @@ export default function ChartBuilderPage() {
       savedAt: Date.now(),
     });
   }, [title, minimumMinutes, items, studioId]);
+
+  // Warn on browser refresh/close when there are unsaved changes
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (userModified.current) {
+        e.preventDefault();
+      }
+    };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, []);
+
+  const handleNavigateAway = useCallback(() => {
+    if (userModified.current) {
+      setShowLeaveConfirm(true);
+    } else {
+      navigate(studioId ? `/studios/${studioId}` : -1 as any);
+    }
+  }, [navigate, studioId]);
+
+  const handleDiscard = useCallback(() => {
+    clearDraft(draftKeyRef.current);
+    userModified.current = false;
+    setShowLeaveConfirm(false);
+    navigate(studioId ? `/studios/${studioId}` : -1 as any);
+  }, [navigate, studioId]);
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
@@ -278,10 +304,12 @@ export default function ChartBuilderPage() {
       if (isEditing && id) {
         await updateChart(id, payload);
         clearDraft(draftKeyRef.current);
+        userModified.current = false;
         navigate(`/studios/${studioId}`);
       } else if (studioId) {
         await createChart(studioId, payload);
         clearDraft(draftKeyRef.current);
+        userModified.current = false;
         navigate(`/studios/${studioId}`);
       }
     } catch (err) {
@@ -303,7 +331,7 @@ export default function ChartBuilderPage() {
     <div className="space-y-6 max-w-2xl">
       {/* Back */}
       <button
-        onClick={() => navigate(studioId ? `/studios/${studioId}` : -1 as any)}
+        onClick={handleNavigateAway}
         className="flex items-center gap-2 text-sm text-gray-500 hover:text-primary-600 transition-colors"
       >
         <ArrowLeft className="w-4 h-4" />
@@ -314,22 +342,36 @@ export default function ChartBuilderPage() {
         {isEditing ? 'Edit Chart' : 'New Practice Chart'}
       </h1>
 
-      {/* Restored draft banner */}
+      {/* Unsaved changes confirmation */}
       <AnimatePresence>
-        {restoredDraft && (
+        {showLeaveConfirm && (
           <motion.div
             initial={{ opacity: 0, y: -4 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -4 }}
-            className="flex items-center justify-between px-4 py-2.5 bg-warm-100 border border-warm-200 rounded-xl"
+            className="flex items-center justify-between px-4 py-3 bg-warm-100 border border-warm-200 rounded-xl"
           >
-            <p className="text-sm font-medium text-warm-600">Restored unsaved changes</p>
-            <button
-              onClick={() => setRestoredDraft(false)}
-              className="p-1 text-warm-400 hover:text-warm-600 transition-colors"
-            >
-              <X className="w-4 h-4" />
-            </button>
+            <p className="text-sm font-medium text-warm-600">You have unsaved changes</p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowLeaveConfirm(false)}
+                className="px-3 py-1.5 text-sm font-semibold text-gray-500 bg-white rounded-lg hover:bg-gray-100 transition-colors"
+              >
+                Keep editing
+              </button>
+              <button
+                onClick={handleDiscard}
+                className="px-3 py-1.5 text-sm font-semibold text-red-600 bg-white rounded-lg hover:bg-red-50 transition-colors"
+              >
+                Discard
+              </button>
+              <button
+                onClick={() => { setShowLeaveConfirm(false); handleSave(); }}
+                className="px-3 py-1.5 text-sm font-semibold text-white bg-primary-600 rounded-lg hover:bg-primary-700 transition-colors"
+              >
+                Save
+              </button>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
