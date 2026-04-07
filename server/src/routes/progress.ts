@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { db, schema } from '../db/index.js';
-import { eq, and, sql, desc } from 'drizzle-orm';
+import { eq, and, sql, desc, inArray } from 'drizzle-orm';
 import { verifyMembership } from './studios.js';
 
 export const progressRouter = Router();
@@ -36,7 +36,7 @@ progressRouter.get('/studios/:studioId', async (req, res) => {
     })
       .from(schema.practiceSessions)
       .where(and(
-        sql`${schema.practiceSessions.chartId} = ANY(${chartIds})`,
+        inArray(schema.practiceSessions.chartId, chartIds),
         eq(schema.practiceSessions.userId, userId),
         sql`${schema.practiceSessions.completedAt} IS NOT NULL`
       ));
@@ -48,7 +48,7 @@ progressRouter.get('/studios/:studioId', async (req, res) => {
     })
       .from(schema.practiceSessions)
       .where(and(
-        sql`${schema.practiceSessions.chartId} = ANY(${chartIds})`,
+        inArray(schema.practiceSessions.chartId, chartIds),
         eq(schema.practiceSessions.userId, userId),
         sql`${schema.practiceSessions.completedAt} IS NOT NULL`,
         sql`${schema.practiceSessions.completedAt} >= date_trunc('week', now())`
@@ -58,11 +58,11 @@ progressRouter.get('/studios/:studioId', async (req, res) => {
 
     // Calculate streak (consecutive days with practice)
     const recentDays = await db.select({
-      day: sql<string>`date(${schema.practiceSessions.completedAt})`,
+      day: sql<string>`to_char(date(${schema.practiceSessions.completedAt}), 'YYYY-MM-DD')`,
     })
       .from(schema.practiceSessions)
       .where(and(
-        sql`${schema.practiceSessions.chartId} = ANY(${chartIds})`,
+        inArray(schema.practiceSessions.chartId, chartIds),
         eq(schema.practiceSessions.userId, userId),
         sql`${schema.practiceSessions.completedAt} IS NOT NULL`
       ))
@@ -70,16 +70,28 @@ progressRouter.get('/studios/:studioId', async (req, res) => {
       .orderBy(sql`date(${schema.practiceSessions.completedAt}) DESC`);
 
     let currentStreak = 0;
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    for (let i = 0; i < recentDays.length; i++) {
-      const expected = new Date(today);
-      expected.setDate(expected.getDate() - i);
-      const dayStr = expected.toISOString().split('T')[0];
-      if (recentDays[i].day === dayStr) {
-        currentStreak++;
-      } else {
-        break;
+    if (recentDays.length > 0) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const todayStr = today.toISOString().split('T')[0];
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+      const yesterdayStr = yesterday.toISOString().split('T')[0];
+
+      // Streak counts if most recent practice was today or yesterday
+      const mostRecent = recentDays[0].day;
+      if (mostRecent === todayStr || mostRecent === yesterdayStr) {
+        const startDate = mostRecent === todayStr ? today : yesterday;
+        for (let i = 0; i < recentDays.length; i++) {
+          const expected = new Date(startDate);
+          expected.setDate(expected.getDate() - i);
+          const expectedStr = expected.toISOString().split('T')[0];
+          if (recentDays[i].day === expectedStr) {
+            currentStreak++;
+          } else {
+            break;
+          }
+        }
       }
     }
 
