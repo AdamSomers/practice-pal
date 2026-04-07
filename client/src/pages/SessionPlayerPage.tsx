@@ -116,20 +116,43 @@ export default function SessionPlayerPage() {
       handleFirstInteraction();
       if (!session) return;
 
+      // Optimistic update
+      const tempId = `pending_${Date.now()}`;
+      setCheckState((prev) => {
+        const next = { ...prev };
+        const map = new Map(next[itemId]);
+        map.set(repNum, tempId);
+        next[itemId] = map;
+        return next;
+      });
+
       try {
         const checkoff = await checkoffItem(session.id, {
           chartItemId: itemId,
           repetitionNumber: repNum,
         });
+        // Replace temp ID with real ID
         setCheckState((prev) => {
           const next = { ...prev };
           const map = new Map(next[itemId]);
-          map.set(repNum, checkoff.id);
+          if (map.get(repNum) === tempId) {
+            map.set(repNum, checkoff.id);
+          }
           next[itemId] = map;
           return next;
         });
       } catch (err) {
         console.error('Failed to check item:', err);
+        // Rollback
+        setCheckState((prev) => {
+          const next = { ...prev };
+          const map = new Map(next[itemId]);
+          if (map.get(repNum) === tempId) {
+            map.delete(repNum);
+          }
+          next[itemId] = map;
+          return next;
+        });
       }
     },
     [session, handleFirstInteraction]
@@ -141,17 +164,27 @@ export default function SessionPlayerPage() {
       const checkoffId = checkState[itemId]?.get(repNum);
       if (!checkoffId) return;
 
+      // Optimistic update
+      setCheckState((prev) => {
+        const next = { ...prev };
+        const map = new Map(next[itemId]);
+        map.delete(repNum);
+        next[itemId] = map;
+        return next;
+      });
+
       try {
         await uncheckItem(session.id, checkoffId);
+      } catch (err) {
+        console.error('Failed to uncheck item:', err);
+        // Rollback
         setCheckState((prev) => {
           const next = { ...prev };
           const map = new Map(next[itemId]);
-          map.delete(repNum);
+          map.set(repNum, checkoffId);
           next[itemId] = map;
           return next;
         });
-      } catch (err) {
-        console.error('Failed to uncheck item:', err);
       }
     },
     [session, checkState]

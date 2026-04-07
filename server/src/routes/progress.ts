@@ -41,25 +41,59 @@ progressRouter.get('/studios/:studioId', async (req, res) => {
         sql`${schema.practiceSessions.completedAt} IS NOT NULL`
       ));
 
-    // Weekly data (last 12 weeks)
-    const weeklyData = await db.select({
-      week: sql<string>`date_trunc('week', ${schema.practiceSessions.completedAt})`,
+    // Daily data for current week (Mon-Sun)
+    const dailyData = await db.select({
+      day: sql<string>`to_char(${schema.practiceSessions.completedAt}, 'Dy')`,
       totalSeconds: sql<number>`coalesce(sum(${schema.practiceSessions.durationSeconds}), 0)`,
-      sessionCount: sql<number>`count(*)`,
     })
       .from(schema.practiceSessions)
       .where(and(
         sql`${schema.practiceSessions.chartId} = ANY(${chartIds})`,
         eq(schema.practiceSessions.userId, userId),
         sql`${schema.practiceSessions.completedAt} IS NOT NULL`,
-        sql`${schema.practiceSessions.completedAt} >= now() - interval '12 weeks'`
+        sql`${schema.practiceSessions.completedAt} >= date_trunc('week', now())`
       ))
-      .groupBy(sql`date_trunc('week', ${schema.practiceSessions.completedAt})`)
-      .orderBy(sql`date_trunc('week', ${schema.practiceSessions.completedAt})`);
+      .groupBy(sql`to_char(${schema.practiceSessions.completedAt}, 'Dy')`)
+      .orderBy(sql`min(${schema.practiceSessions.completedAt})`);
+
+    // Calculate streak (consecutive days with practice)
+    const recentDays = await db.select({
+      day: sql<string>`date(${schema.practiceSessions.completedAt})`,
+    })
+      .from(schema.practiceSessions)
+      .where(and(
+        sql`${schema.practiceSessions.chartId} = ANY(${chartIds})`,
+        eq(schema.practiceSessions.userId, userId),
+        sql`${schema.practiceSessions.completedAt} IS NOT NULL`
+      ))
+      .groupBy(sql`date(${schema.practiceSessions.completedAt})`)
+      .orderBy(sql`date(${schema.practiceSessions.completedAt}) DESC`);
+
+    let currentStreak = 0;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    for (let i = 0; i < recentDays.length; i++) {
+      const expected = new Date(today);
+      expected.setDate(expected.getDate() - i);
+      const dayStr = expected.toISOString().split('T')[0];
+      if (recentDays[i].day === dayStr) {
+        currentStreak++;
+      } else {
+        break;
+      }
+    }
+
+    // Build weeklyData in frontend format
+    const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    const weeklyData = dayNames.map(day => {
+      const match = dailyData.find(d => d.day === day);
+      return { day, minutes: match ? Math.round(Number(match.totalSeconds) / 60) : 0 };
+    });
 
     res.json({
-      totalSeconds: Number(totals.totalSeconds),
+      totalPracticeMinutes: Math.round(Number(totals.totalSeconds) / 60),
       sessionCount: Number(totals.sessionCount),
+      currentStreak,
       weeklyData,
     });
   } catch (err) {
