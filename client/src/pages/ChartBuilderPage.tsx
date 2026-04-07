@@ -107,6 +107,7 @@ export default function ChartBuilderPage() {
   const [restoredDraft, setRestoredDraft] = useState(false);
   const draftKeyRef = useRef(getDraftKey(isEditing, id, studioIdFromUrl || ''));
   const initialLoadDone = useRef(false);
+  const userModified = useRef(false);
 
   // Modal state
   const [showCategoryPicker, setShowCategoryPicker] = useState(false);
@@ -179,9 +180,9 @@ export default function ChartBuilderPage() {
     })();
   }, [id, isEditing]);
 
-  // Auto-save draft on every change
+  // Auto-save draft on every change, but only after user has modified something
   useEffect(() => {
-    if (!initialLoadDone.current) return;
+    if (!initialLoadDone.current || !userModified.current) return;
     saveDraft(draftKeyRef.current, {
       title,
       minimumMinutes,
@@ -195,6 +196,7 @@ export default function ChartBuilderPage() {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
+    userModified.current = true;
     setItems((prev) => {
       const oldIndex = prev.findIndex((i) => i.localId === active.id);
       const newIndex = prev.findIndex((i) => i.localId === over.id);
@@ -205,6 +207,7 @@ export default function ChartBuilderPage() {
 
   const handleAddItem = (config: ChartItemConfig, repetitions: number) => {
     if (!newItemCategory) return;
+    userModified.current = true;
     setItems((prev) => [
       ...prev,
       {
@@ -220,6 +223,7 @@ export default function ChartBuilderPage() {
 
   const handleEditItem = (config: ChartItemConfig, repetitions: number) => {
     if (!editingItem) return;
+    userModified.current = true;
     setItems((prev) =>
       prev.map((item) =>
         item.localId === editingItem.localId
@@ -231,6 +235,7 @@ export default function ChartBuilderPage() {
   };
 
   const handleDeleteItem = (localId: string) => {
+    userModified.current = true;
     setItems((prev) =>
       prev
         .filter((i) => i.localId !== localId)
@@ -239,6 +244,7 @@ export default function ChartBuilderPage() {
   };
 
   const handleDuplicateItem = (localId: string) => {
+    userModified.current = true;
     setItems((prev) => {
       const source = prev.find((i) => i.localId === localId);
       if (!source) return prev;
@@ -336,7 +342,7 @@ export default function ChartBuilderPage() {
         <input
           type="text"
           value={title}
-          onChange={(e) => setTitle(e.target.value)}
+          onChange={(e) => { userModified.current = true; setTitle(e.target.value); }}
           placeholder="e.g., Week of Mar 4"
           className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-transparent transition shadow-sm"
         />
@@ -349,7 +355,7 @@ export default function ChartBuilderPage() {
         </label>
         <select
           value={minimumMinutes}
-          onChange={(e) => setMinimumMinutes(Number(e.target.value))}
+          onChange={(e) => { userModified.current = true; setMinimumMinutes(Number(e.target.value)); }}
           className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-800 focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-transparent transition shadow-sm"
         >
           <option value={0}>No minimum</option>

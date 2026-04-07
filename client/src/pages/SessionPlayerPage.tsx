@@ -4,6 +4,7 @@ import { ArrowLeft } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   getChart,
+  getSession,
   startSession,
   checkoffItem,
   uncheckItem,
@@ -41,7 +42,7 @@ export default function SessionPlayerPage() {
   const [phase, setPhase] = useState<'playing' | 'celebration' | 'reward'>('playing');
   const audioInitRef = useRef(false);
 
-  // Load chart and start session
+  // Load chart and start or resume session
   useEffect(() => {
     if (!chartId) return;
     (async () => {
@@ -49,13 +50,42 @@ export default function SessionPlayerPage() {
         const chartData = await getChart(chartId);
         setChart(chartData);
 
-        const sessionData = await startSession(chartId);
+        // Try to resume an existing session from localStorage
+        const sessionKey = `pp_active_session_${chartId}`;
+        const savedSessionId = localStorage.getItem(sessionKey);
+        let sessionData: PracticeSession | null = null;
+        let existingCheckoffs: import('../lib/types').SessionCheckoff[] = [];
+
+        if (savedSessionId) {
+          try {
+            const resumed = await getSession(savedSessionId);
+            if (!resumed.completedAt) {
+              sessionData = resumed;
+              existingCheckoffs = resumed.checkoffs || [];
+            } else {
+              localStorage.removeItem(sessionKey);
+            }
+          } catch {
+            localStorage.removeItem(sessionKey);
+          }
+        }
+
+        if (!sessionData) {
+          sessionData = await startSession(chartId);
+          localStorage.setItem(sessionKey, sessionData.id);
+        }
+
         setSession(sessionData);
 
-        // Initialize check state
+        // Initialize check state, restoring any existing checkoffs
         const initial: CheckState = {};
         for (const item of chartData.items) {
           initial[item.id] = new Map();
+        }
+        for (const checkoff of existingCheckoffs) {
+          if (initial[checkoff.chartItemId]) {
+            initial[checkoff.chartItemId].set(checkoff.repetitionNumber, checkoff.id);
+          }
         }
         setCheckState(initial);
       } catch (err) {
@@ -128,9 +158,10 @@ export default function SessionPlayerPage() {
   );
 
   const handleComplete = useCallback(async () => {
-    if (!session) return;
+    if (!session || !chart) return;
     try {
       await completeSession(session.id, elapsed);
+      localStorage.removeItem(`pp_active_session_${chart.id}`);
       setIsComplete(true);
       setPhase('celebration');
       // Claim reward in background
@@ -145,7 +176,7 @@ export default function SessionPlayerPage() {
       setIsComplete(true);
       setPhase('celebration');
     }
-  }, [session, elapsed]);
+  }, [session, elapsed, chart]);
 
   // Calculate progress (accounts for sections mode)
   const totalCheckboxes = chart
@@ -231,7 +262,10 @@ export default function SessionPlayerPage() {
     <div className="space-y-4 pb-8" onClick={handleFirstInteraction}>
       {/* Back */}
       <button
-        onClick={() => navigate(`/studios/${chart.studioId}`)}
+        onClick={() => {
+          localStorage.removeItem(`pp_active_session_${chart.id}`);
+          navigate(`/studios/${chart.studioId}`);
+        }}
         className="flex items-center gap-2 text-sm text-gray-500 hover:text-primary-600 transition-colors"
       >
         <ArrowLeft className="w-4 h-4" />
