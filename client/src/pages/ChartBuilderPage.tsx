@@ -204,12 +204,13 @@ export default function ChartBuilderPage() {
   }, []);
 
   const handleNavigateAway = useCallback(() => {
-    if (userModified.current) {
+    if (userModified.current && items.length > 0) {
       setShowLeaveConfirm(true);
     } else {
+      clearDraft(draftKeyRef.current);
       navigate(studioId ? `/studios/${studioId}` : -1 as any);
     }
-  }, [navigate, studioId]);
+  }, [navigate, studioId, items.length]);
 
   const handleDiscard = useCallback(() => {
     clearDraft(draftKeyRef.current);
