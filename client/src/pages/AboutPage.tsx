@@ -1,8 +1,10 @@
 import { ArrowLeft, Music } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import v010 from '../../../release-notes/v0.1.0.md?raw';
+import v011 from '../../../release-notes/v0.1.1.md?raw';
 
 const sortedNotes = [
+  { version: 'v0.1.1', content: v011 },
   { version: 'v0.1.0', content: v010 },
 ];
 
