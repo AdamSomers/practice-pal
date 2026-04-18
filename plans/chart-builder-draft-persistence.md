@@ -1,8 +1,9 @@
 # Chart Builder Draft Persistence
 
-**Status:** awaiting-acceptance
+**Status:** merged
 **Size:** S
 **Branch:** fix/chart-builder-draft-persistence
+**Version:** v0.1.1
 
 ## Items
 - [ ] Auto-save chart builder state to localStorage on every change (Acceptance: add items to a chart, refresh the page, see items restored)

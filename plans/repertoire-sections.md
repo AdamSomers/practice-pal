@@ -1,8 +1,9 @@
 # Repertoire Section Practice
 
-**Status:** awaiting-acceptance
+**Status:** merged
 **Size:** M
 **Branch:** feature/repertoire-sections
+**Version:** v0.1.0
 
 ## Requirements
 

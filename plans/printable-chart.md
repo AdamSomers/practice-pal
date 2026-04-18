@@ -1,8 +1,9 @@
 # Printable Chart
 
-**Status:** awaiting-acceptance
+**Status:** merged
 **Size:** M
 **Branch:** feature/printable-chart
+**Version:** v0.1.0
 
 ## Requirements
 

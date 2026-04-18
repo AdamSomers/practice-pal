@@ -1,8 +1,9 @@
 # Batch S Items - April 2026
 
-**Status:** awaiting-acceptance
+**Status:** merged
 **Size:** S (x9)
 **Branch:** fix/batch-s-items-2026-04-05
+**Version:** v0.1.0
 
 ## Items
 

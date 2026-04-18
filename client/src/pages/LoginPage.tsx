@@ -14,6 +14,7 @@ const TEST_ACCOUNTS = [
   { id: 'parent-frank', label: 'Frank', desc: 'Parent' },
   { id: 'teacher-katie', label: 'Katie', desc: 'Teacher' },
   { id: 'shared-viewer-luna', label: 'Luna', desc: 'Shared viewer' },
+  { id: 'suzy', label: 'Suzy', desc: 'Blank slate' },
 ];
 
 export default function LoginPage() {
