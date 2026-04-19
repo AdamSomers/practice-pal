@@ -228,12 +228,13 @@ function renderCategoryFields(
               placeholder="e.g., Lydian, Mixolydian"
             />
           )}
-          <TextInput
-            label="BPM (optional)"
-            value={config.bpm?.toString() || ''}
-            onChange={(v) => update('bpm', v ? Number(v) : undefined)}
-            type="number"
-            placeholder="e.g., 80"
+          <BpmRangeInput
+            bpm={config.bpm}
+            bpmMax={config.bpmMax}
+            onChange={(min, max) => {
+              update('bpm', min);
+              update('bpmMax', max);
+            }}
           />
         </>
       );
@@ -264,12 +265,13 @@ function renderCategoryFields(
               <option value="minor_7th">Minor 7th</option>
             </select>
           </div>
-          <TextInput
-            label="BPM (optional)"
-            value={config.bpm?.toString() || ''}
-            onChange={(v) => update('bpm', v ? Number(v) : undefined)}
-            type="number"
-            placeholder="e.g., 80"
+          <BpmRangeInput
+            bpm={config.bpm}
+            bpmMax={config.bpmMax}
+            onChange={(min, max) => {
+              update('bpm', min);
+              update('bpmMax', max);
+            }}
           />
         </>
       );
@@ -451,12 +453,13 @@ function renderCategoryFields(
             onChange={(v) => update('movement', v)}
             placeholder="e.g., 1st Movement"
           />
-          <TextInput
-            label="BPM (optional)"
-            value={config.bpm?.toString() || ''}
-            onChange={(v) => update('bpm', v ? Number(v) : undefined)}
-            type="number"
-            placeholder="e.g., 120"
+          <BpmRangeInput
+            bpm={config.bpm}
+            bpmMax={config.bpmMax}
+            onChange={(min, max) => {
+              update('bpm', min);
+              update('bpmMax', max);
+            }}
           />
         </>
       );
@@ -516,6 +519,48 @@ function renderCategoryFields(
     default:
       return null;
   }
+}
+
+function BpmRangeInput({
+  bpm,
+  bpmMax,
+  onChange,
+}: {
+  bpm?: number;
+  bpmMax?: number;
+  onChange: (min: number | undefined, max: number | undefined) => void;
+}) {
+  return (
+    <div>
+      <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+        BPM <span className="font-normal text-gray-400">(optional, set a range with upper value)</span>
+      </label>
+      <div className="flex items-center gap-2">
+        <input
+          type="number"
+          value={bpm ?? ''}
+          onChange={(e) => {
+            const raw = e.target.value;
+            onChange(raw ? Number(raw) : undefined, bpmMax);
+          }}
+          placeholder="e.g., 80"
+          className="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-400 transition"
+        />
+        <span className="text-gray-400 text-sm font-semibold">to</span>
+        <input
+          type="number"
+          value={bpmMax ?? ''}
+          onChange={(e) => {
+            const raw = e.target.value;
+            onChange(bpm, raw ? Number(raw) : undefined);
+          }}
+          placeholder="upper"
+          disabled={!bpm}
+          className="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-400 transition disabled:opacity-50 disabled:cursor-not-allowed"
+        />
+      </div>
+    </div>
+  );
 }
 
 function TextInput({
