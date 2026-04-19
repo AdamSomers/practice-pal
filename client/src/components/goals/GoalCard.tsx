@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Calendar, Check, Trash2 } from 'lucide-react';
+import { Calendar, Check, Pencil, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { Goal } from '../../lib/types';
 
@@ -8,9 +8,10 @@ interface GoalCardProps {
   canEdit: boolean;
   onComplete: (id: string) => void;
   onDelete: (id: string) => void;
+  onEdit?: (goal: Goal) => void;
 }
 
-export default function GoalCard({ goal, canEdit, onComplete, onDelete }: GoalCardProps) {
+export default function GoalCard({ goal, canEdit, onComplete, onDelete, onEdit }: GoalCardProps) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [confirmComplete, setConfirmComplete] = useState(false);
   const isCompleted = !!goal.completedAt;
@@ -61,6 +62,15 @@ export default function GoalCard({ goal, canEdit, onComplete, onDelete }: GoalCa
             >
               <Check className="w-4 h-4" />
             </button>
+            {onEdit && (
+              <button
+                onClick={() => onEdit(goal)}
+                className="p-2 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+                title="Edit"
+              >
+                <Pencil className="w-3.5 h-3.5" />
+              </button>
+            )}
             <button
               onClick={() => setConfirmDelete(true)}
               className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"

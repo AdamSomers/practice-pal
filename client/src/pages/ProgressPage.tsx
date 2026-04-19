@@ -11,7 +11,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts';
-import { getProgress, getStudio, updateStudio, getSessionRewards, getGoals, createGoal, completeGoal, deleteGoal } from '../lib/api';
+import { getProgress, getStudio, updateStudio, getSessionRewards, getGoals, createGoal, updateGoal, completeGoal, deleteGoal } from '../lib/api';
 import type { ProgressStats, Studio, SessionReward, Goal } from '../lib/types';
 import RewardGrid from '../components/rewards/RewardGrid';
 import GoalCard from '../components/goals/GoalCard';
@@ -28,6 +28,7 @@ export default function ProgressPage() {
   const [goals, setGoals] = useState<Goal[]>([]);
   const [loading, setLoading] = useState(true);
   const [showGoalForm, setShowGoalForm] = useState(false);
+  const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
   const [showCompletedGoals, setShowCompletedGoals] = useState(false);
   const [celebratingGoal, setCelebratingGoal] = useState<Goal | null>(null);
 
@@ -239,6 +240,7 @@ export default function ProgressPage() {
                     key={goal.id}
                     goal={goal}
                     canEdit={canEdit}
+                    onEdit={(g) => setEditingGoal(g)}
                     onComplete={async (goalId) => {
                       try {
                         const updated = await completeGoal(goalId);
@@ -303,21 +305,31 @@ export default function ProgressPage() {
         })()}
       </motion.div>
 
-      {/* Goal form modal */}
+      {/* Goal form modal (create or edit) */}
       <AnimatePresence>
-        {showGoalForm && id && (
+        {(showGoalForm || editingGoal) && id && (
           <GoalForm
             studioId={id}
+            initialGoal={editingGoal || undefined}
             onSubmit={async (data) => {
               try {
-                const goal = await createGoal({ ...data, studioId: id });
-                setGoals(prev => [goal, ...prev]);
-                setShowGoalForm(false);
+                if (editingGoal) {
+                  const updated = await updateGoal(editingGoal.id, data);
+                  setGoals(prev => prev.map(g => g.id === editingGoal.id ? updated : g));
+                  setEditingGoal(null);
+                } else {
+                  const goal = await createGoal({ ...data, studioId: id });
+                  setGoals(prev => [goal, ...prev]);
+                  setShowGoalForm(false);
+                }
               } catch (err) {
-                console.error('Failed to create goal:', err);
+                console.error('Failed to save goal:', err);
               }
             }}
-            onClose={() => setShowGoalForm(false)}
+            onClose={() => {
+              setShowGoalForm(false);
+              setEditingGoal(null);
+            }}
           />
         )}
       </AnimatePresence>
