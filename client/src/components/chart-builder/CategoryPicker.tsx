@@ -5,6 +5,7 @@ import {
   BookOpen,
   Eye,
   Lightbulb,
+  Dumbbell,
   MoreHorizontal,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -63,6 +64,13 @@ const CATEGORIES: {
     icon: <Lightbulb className="w-6 h-6" />,
     color: 'text-amber-500',
     bg: 'bg-amber-100',
+  },
+  {
+    key: 'technique',
+    label: 'Technique',
+    icon: <Dumbbell className="w-6 h-6" />,
+    color: 'text-indigo-500',
+    bg: 'bg-indigo-100',
   },
   {
     key: 'other',

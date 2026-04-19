@@ -37,6 +37,10 @@ function getItemDetails(category: ChartCategory, config: ChartItemConfig): strin
     case 'other':
       if (config.description) parts.push(config.description);
       break;
+    case 'technique':
+      if (config.description) parts.push(config.description);
+      if (config.bpm) parts.push(`${config.bpm} BPM`);
+      break;
   }
   if (config.notes) parts.push(config.notes);
   return parts.join(' \u00B7 ');

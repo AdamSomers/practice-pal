@@ -34,6 +34,8 @@ function getItemLabel(category: ChartCategory, config: ChartItemConfig): string 
       return config.description || 'Sight reading';
     case 'theory':
       return config.label || 'Theory exercise';
+    case 'technique':
+      return config.label || 'Technique exercise';
     case 'other':
       return config.label || 'Exercise';
     default:
@@ -83,7 +85,7 @@ export default function ChartItemCard({
       {/* Content */}
       <div className="flex-1 min-w-0">
         <p className="font-semibold text-gray-800 truncate capitalize">{label}</p>
-        {(category === 'theory' || category === 'other') && config.description && (
+        {(category === 'theory' || category === 'other' || category === 'technique') && config.description && (
           <p className="text-[11px] text-gray-500 truncate mt-0.5">{config.description}</p>
         )}
         <div className="flex items-center gap-2 mt-0.5 text-xs text-gray-400 flex-wrap">

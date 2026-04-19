@@ -3,7 +3,7 @@ import { pgTable, uuid, text, timestamp, integer, jsonb, pgEnum, boolean, date }
 export const studioRoleEnum = pgEnum('studio_role', ['owner', 'editor', 'viewer']);
 export const recordingTypeEnum = pgEnum('recording_type', ['file_upload', 'youtube_link']);
 export const chartCategoryEnum = pgEnum('chart_category', [
-  'scales', 'arpeggios', 'cadences', 'repertoire', 'sight_reading', 'theory', 'other'
+  'scales', 'arpeggios', 'cadences', 'repertoire', 'sight_reading', 'theory', 'technique', 'other'
 ]);
 
 export const users = pgTable('users', {
