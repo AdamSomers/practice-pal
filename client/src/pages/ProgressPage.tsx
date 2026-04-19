@@ -31,6 +31,7 @@ export default function ProgressPage() {
   const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
   const [showCompletedGoals, setShowCompletedGoals] = useState(false);
   const [celebratingGoal, setCelebratingGoal] = useState<Goal | null>(null);
+  const [rewardsRefreshKey, setRewardsRefreshKey] = useState(0);
 
   const canEdit = studio?.role === 'owner' || studio?.role === 'editor';
 
@@ -338,6 +339,7 @@ export default function ProgressPage() {
           <GoalForm
             studioId={id}
             initialGoal={editingGoal || undefined}
+            onCustomRewardCreated={() => setRewardsRefreshKey(k => k + 1)}
             onSubmit={async (data) => {
               try {
                 if (editingGoal) {
@@ -398,7 +400,7 @@ export default function ProgressPage() {
           />
           <div className="pt-3 border-t border-gray-100">
             <h3 className="text-sm font-bold text-gray-700 mb-2">Custom Rewards</h3>
-            <RewardsLibrary studioId={id} />
+            <RewardsLibrary key={rewardsRefreshKey} studioId={id} />
           </div>
         </motion.div>
       )}

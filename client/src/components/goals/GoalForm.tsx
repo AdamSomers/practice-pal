@@ -18,9 +18,10 @@ interface GoalFormProps {
     customRewardTitle?: string;
   }) => void;
   onClose: () => void;
+  onCustomRewardCreated?: (reward: CustomReward) => void;
 }
 
-export default function GoalForm({ studioId, initialGoal, onSubmit, onClose }: GoalFormProps) {
+export default function GoalForm({ studioId, initialGoal, onSubmit, onClose, onCustomRewardCreated }: GoalFormProps) {
   const [title, setTitle] = useState(initialGoal?.title || '');
   const [description, setDescription] = useState(initialGoal?.description || '');
   const [targetDate, setTargetDate] = useState(initialGoal?.targetDate || '');
@@ -225,6 +226,7 @@ export default function GoalForm({ studioId, initialGoal, onSubmit, onClose }: G
                           setSelectedCustomReward(cr.id);
                           setShowNewReward(false);
                           setNewRewardTitle('');
+                          onCustomRewardCreated?.(cr);
                         } catch (err) {
                           console.error('Failed to create reward:', err);
                         }

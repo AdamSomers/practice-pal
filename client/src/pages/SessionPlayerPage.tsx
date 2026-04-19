@@ -425,7 +425,7 @@ export default function SessionPlayerPage() {
             >
               <h3 className="text-lg font-bold text-gray-800 mb-1">End this session?</h3>
               <p className="text-sm text-gray-500 mb-5">
-                Your progress is saved. You can come back to resume it later.
+                Your current progress will be discarded and no reward will be earned.
               </p>
               <div className="flex gap-3">
                 <button

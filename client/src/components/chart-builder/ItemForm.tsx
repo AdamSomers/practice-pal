@@ -514,12 +514,13 @@ function renderCategoryFields(
             onChange={(v) => update('description', v)}
             placeholder="Optional notes..."
           />
-          <TextInput
-            label="BPM (optional)"
-            value={config.bpm?.toString() || ''}
-            onChange={(v) => update('bpm', v ? Number(v) : undefined)}
-            type="number"
-            placeholder="e.g., 80"
+          <BpmRangeInput
+            bpm={config.bpm}
+            bpmMax={config.bpmMax}
+            onChange={(min, max) => {
+              update('bpm', min);
+              update('bpmMax', max);
+            }}
           />
         </>
       );
