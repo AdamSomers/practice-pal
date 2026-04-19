@@ -22,6 +22,7 @@ const CATEGORY_LABELS: Record<ChartCategory, string> = {
   repertoire: 'Repertoire',
   sight_reading: 'Sight Reading',
   theory: 'Theory',
+  technique: 'Technique',
   other: 'Other',
 };
 
@@ -491,6 +492,31 @@ function renderCategoryFields(
             value={config.description || ''}
             onChange={(v) => update('description', v)}
             placeholder="Describe the theory exercise..."
+          />
+        </>
+      );
+
+    case 'technique':
+      return (
+        <>
+          <TextInput
+            label="Exercise Name"
+            value={config.label || ''}
+            onChange={(v) => update('label', v)}
+            placeholder="e.g., Hanon No. 1"
+          />
+          <TextInput
+            label="Description"
+            value={config.description || ''}
+            onChange={(v) => update('description', v)}
+            placeholder="Optional notes..."
+          />
+          <TextInput
+            label="BPM (optional)"
+            value={config.bpm?.toString() || ''}
+            onChange={(v) => update('bpm', v ? Number(v) : undefined)}
+            type="number"
+            placeholder="e.g., 80"
           />
         </>
       );

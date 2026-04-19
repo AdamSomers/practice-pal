@@ -36,6 +36,11 @@ function getItemDetails(category: ChartCategory, config: ChartItemConfig): strin
       if (config.label) details.push(config.label);
       if (config.description) details.push(config.description);
       break;
+    case 'technique':
+      if (config.label) details.push(config.label);
+      if (config.description) details.push(config.description);
+      if (config.bpm) details.push(`BPM: ${config.bpm}`);
+      break;
   }
 
   if (config.modifiers && config.modifiers.length > 0) {

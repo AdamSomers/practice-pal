@@ -41,6 +41,7 @@ export type ChartCategory =
   | 'repertoire'
   | 'sight_reading'
   | 'theory'
+  | 'technique'
   | 'other';
 
 export interface ChartItemConfig {
