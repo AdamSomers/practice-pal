@@ -8,7 +8,8 @@ interface ModifierSelectorProps {
 }
 
 const DEFAULT_SUGGESTIONS = [
-  'Hands separate',
+  'Left hand',
+  'Right hand',
   'Hands together',
   'Contrary motion',
   'Staccato',

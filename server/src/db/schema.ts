@@ -110,7 +110,7 @@ export const goals = pgTable('goals', {
   targetDate: date('target_date'),
   rewardType: text('reward_type').notNull().default('emoji'),
   rewardEmoji: text('reward_emoji'),
-  customRewardId: uuid('custom_reward_id').references(() => customRewards.id),
+  customRewardId: uuid('custom_reward_id').references(() => customRewards.id, { onDelete: 'set null' }),
   customRewardTitle: text('custom_reward_title'),
   completedAt: timestamp('completed_at'),
   completedBy: uuid('completed_by').references(() => users.id),

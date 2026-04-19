@@ -83,6 +83,9 @@ export default function ChartItemCard({
       {/* Content */}
       <div className="flex-1 min-w-0">
         <p className="font-semibold text-gray-800 truncate capitalize">{label}</p>
+        {(category === 'theory' || category === 'other') && config.description && (
+          <p className="text-[11px] text-gray-500 truncate mt-0.5">{config.description}</p>
+        )}
         <div className="flex items-center gap-2 mt-0.5 text-xs text-gray-400 flex-wrap">
           <span>{repetitions}x</span>
           {category === 'repertoire' && config.practiceMode === 'sections' && config.sectionCount && config.sectionsRepsEach && (

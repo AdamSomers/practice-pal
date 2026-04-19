@@ -155,7 +155,7 @@ studiosRouter.patch('/:id', async (req, res) => {
       .where(eq(schema.studios.id, req.params.id))
       .returning();
 
-    res.json(studio);
+    res.json({ ...studio, role: membership.role });
   } catch (err) {
     console.error('update studio error:', err);
     res.status(500).json({ error: 'Internal server error' });

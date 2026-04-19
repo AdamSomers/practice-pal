@@ -5,3 +5,5 @@ dist/
 .DS_Store
 drizzle/meta/
 *.tsbuildinfo
+.claude/
+.playwright-mcp/

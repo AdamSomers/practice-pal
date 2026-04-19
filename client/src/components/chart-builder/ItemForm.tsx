@@ -89,8 +89,8 @@ export default function ItemForm({
           {/* Category-specific fields */}
           {renderCategoryFields(category, config, update, studioId)}
 
-          {/* Repetitions - hidden when repertoire is in sections mode */}
-          {!(category === 'repertoire' && config.practiceMode === 'sections') && <div>
+          {/* Repetitions - hidden for theory and when repertoire is in sections mode */}
+          {category !== 'theory' && !(category === 'repertoire' && config.practiceMode === 'sections') && <div>
             <label className="block text-sm font-semibold text-gray-700 mb-1.5">
               Repetitions
             </label>
@@ -138,11 +138,13 @@ export default function ItemForm({
             )}
           </div>}
 
-          {/* Modifiers */}
-          <ModifierSelector
-            value={config.modifiers || []}
-            onChange={(mods) => update('modifiers', mods)}
-          />
+          {/* Modifiers - hidden for theory */}
+          {category !== 'theory' && (
+            <ModifierSelector
+              value={config.modifiers || []}
+              onChange={(mods) => update('modifiers', mods)}
+            />
+          )}
 
           {/* Notes */}
           <div>

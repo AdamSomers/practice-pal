@@ -12,6 +12,7 @@ interface GoalCardProps {
 
 export default function GoalCard({ goal, canEdit, onComplete, onDelete }: GoalCardProps) {
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [confirmComplete, setConfirmComplete] = useState(false);
   const isCompleted = !!goal.completedAt;
   const rewardDisplay = goal.rewardType === 'emoji'
     ? goal.rewardEmoji || '🏆'
@@ -54,7 +55,7 @@ export default function GoalCard({ goal, canEdit, onComplete, onDelete }: GoalCa
         {canEdit && !isCompleted && (
           <div className="flex items-center gap-1">
             <button
-              onClick={() => onComplete(goal.id)}
+              onClick={() => setConfirmComplete(true)}
               className="p-2 text-teal-500 hover:bg-teal-50 rounded-lg transition-colors"
               title="Mark complete"
             >
@@ -69,7 +70,48 @@ export default function GoalCard({ goal, canEdit, onComplete, onDelete }: GoalCa
             </button>
           </div>
         )}
+        {canEdit && isCompleted && (
+          <button
+            onClick={() => setConfirmDelete(true)}
+            className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+            title="Delete"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
+        )}
       </div>
+
+      <AnimatePresence>
+        {confirmComplete && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="overflow-hidden"
+          >
+            <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
+              <p className="text-sm text-teal-700 font-medium">Mark this goal complete?</p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setConfirmComplete(false)}
+                  className="px-3 py-1.5 text-sm font-semibold text-gray-500 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    onComplete(goal.id);
+                    setConfirmComplete(false);
+                  }}
+                  className="px-3 py-1.5 text-sm font-semibold text-white bg-teal-500 rounded-lg hover:bg-teal-600 transition-colors"
+                >
+                  Complete
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <AnimatePresence>
         {confirmDelete && (

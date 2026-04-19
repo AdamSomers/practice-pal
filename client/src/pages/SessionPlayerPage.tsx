@@ -40,6 +40,7 @@ export default function SessionPlayerPage() {
   const [showMetronome, setShowMetronome] = useState(false);
   const [reward, setReward] = useState<SessionReward | null>(null);
   const [phase, setPhase] = useState<'playing' | 'celebration' | 'reward'>('playing');
+  const [confirmEnd, setConfirmEnd] = useState(false);
   const audioInitRef = useRef(false);
 
   // Load chart and start or resume session
@@ -295,10 +296,7 @@ export default function SessionPlayerPage() {
     <div className="space-y-4 pb-8" onClick={handleFirstInteraction}>
       {/* Back */}
       <button
-        onClick={() => {
-          localStorage.removeItem(`pp_active_session_${chart.id}`);
-          navigate(`/studios/${chart.studioId}`);
-        }}
+        onClick={() => setConfirmEnd(true)}
         className="flex items-center gap-2 text-sm text-gray-500 hover:text-primary-600 transition-colors"
       >
         <ArrowLeft className="w-4 h-4" />
@@ -402,6 +400,49 @@ export default function SessionPlayerPage() {
 
       {/* Metronome panel */}
       <Metronome isOpen={showMetronome} onClose={() => setShowMetronome(false)} />
+
+      {/* End session confirmation */}
+      <AnimatePresence>
+        {confirmEnd && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-4"
+            onClick={() => setConfirmEnd(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6"
+            >
+              <h3 className="text-lg font-bold text-gray-800 mb-1">End this session?</h3>
+              <p className="text-sm text-gray-500 mb-5">
+                Your progress is saved. You can come back to resume it later.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setConfirmEnd(false)}
+                  className="flex-1 px-4 py-3 bg-gray-100 text-gray-600 rounded-xl font-semibold hover:bg-gray-200 transition-colors"
+                >
+                  Keep practicing
+                </button>
+                <button
+                  onClick={() => {
+                    localStorage.removeItem(`pp_active_session_${chart.id}`);
+                    navigate(`/studios/${chart.studioId}`);
+                  }}
+                  className="flex-1 px-4 py-3 bg-red-500 text-white rounded-xl font-semibold hover:bg-red-600 transition-colors"
+                >
+                  End session
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

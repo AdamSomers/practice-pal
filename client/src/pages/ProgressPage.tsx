@@ -281,9 +281,16 @@ export default function ProgressPage() {
                           <GoalCard
                             key={goal.id}
                             goal={goal}
-                            canEdit={false}
+                            canEdit={canEdit}
                             onComplete={() => {}}
-                            onDelete={() => {}}
+                            onDelete={async (goalId) => {
+                              try {
+                                await deleteGoal(goalId);
+                                setGoals(prev => prev.filter(g => g.id !== goalId));
+                              } catch (err) {
+                                console.error('Failed to delete goal:', err);
+                              }
+                            }}
                           />
                         ))}
                       </motion.div>
