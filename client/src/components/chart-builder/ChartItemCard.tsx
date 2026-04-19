@@ -109,7 +109,7 @@ export default function ChartItemCard({
           {config.bpm && (
             <>
               <span className="text-gray-300">|</span>
-              <span>{config.bpm} BPM</span>
+              <span>{config.bpmMax ? `${config.bpm}-${config.bpmMax}` : config.bpm} BPM</span>
             </>
           )}
           {category === 'sight_reading' && config.key && (

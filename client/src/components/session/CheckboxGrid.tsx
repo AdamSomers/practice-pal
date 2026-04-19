@@ -16,7 +16,7 @@ function getItemDetails(category: ChartCategory, config: ChartItemConfig): strin
       } else if (config.type) {
         parts.push(config.type.replace(/_/g, ' '));
       }
-      if (config.bpm) parts.push(`${config.bpm} BPM`);
+      if (config.bpm) parts.push(`${config.bpmMax ? `${config.bpm}-${config.bpmMax}` : config.bpm} BPM`);
       break;
     case 'cadences':
       if (config.key) parts.push(config.key);
@@ -27,7 +27,7 @@ function getItemDetails(category: ChartCategory, config: ChartItemConfig): strin
       if (config.composer) parts.push(config.composer);
       if (config.movement) parts.push(config.movement);
       if (config.measures) parts.push(`mm. ${config.measures}`);
-      if (config.bpm) parts.push(`${config.bpm} BPM`);
+      if (config.bpm) parts.push(`${config.bpmMax ? `${config.bpm}-${config.bpmMax}` : config.bpm} BPM`);
       break;
     case 'sight_reading':
       if (config.key) parts.push(config.key);

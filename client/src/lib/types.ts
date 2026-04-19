@@ -50,6 +50,7 @@ export interface ChartItemConfig {
   modifiers?: string[];
   notes?: string;
   bpm?: number;
+  bpmMax?: number;
   piece?: string;
   composer?: string;
   movement?: string;
