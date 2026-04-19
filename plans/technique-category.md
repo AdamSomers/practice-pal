@@ -1,8 +1,9 @@
 # Technique Practice Item Category
 
-**Status:** awaiting-acceptance
+**Status:** merged
 **Size:** L
 **Branch:** feature/technique-category
+**Version:** v0.2.0
 
 ## Requirements
 Add a "Technique" practice item category (e.g., Hanon exercises, finger drills). Structurally similar to scales/arpeggios: label, description, optional BPM, repetitions, modifiers.

@@ -1,8 +1,9 @@
 # Session Pause
 
-**Status:** awaiting-acceptance
+**Status:** merged
 **Size:** M
 **Branch:** feature/studio-settings-2026-04-19
+**Version:** v0.2.0
 
 ## Requirements
 Pause button on the practice session timer. Pausing stops the timer; resume continues from paused elapsed. Toggled by a studio setting "Allow session pausing" (default true). When disabled, pause button is hidden.

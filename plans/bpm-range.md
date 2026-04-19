@@ -1,8 +1,9 @@
 # BPM Range
 
-**Status:** awaiting-acceptance
+**Status:** merged
 **Size:** M
 **Branch:** feature/bpm-range
+**Version:** v0.2.0
 
 ## Requirements
 BPM on a practice item should optionally be a range. If the teacher sets a lower and upper BPM, display as "100-120"; if just one value, display as "120" (today's behavior).

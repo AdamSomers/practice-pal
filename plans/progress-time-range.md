@@ -1,8 +1,9 @@
 # Progress Graph Time Range
 
-**Status:** awaiting-acceptance
+**Status:** merged
 **Size:** M
 **Branch:** feature/studio-settings-2026-04-19
+**Version:** v0.2.0
 
 ## Requirements
 Time range selector on the Goals & Progress bar chart. Options: 1w, 2w, 1mo, 3mo, 6mo, custom (date range). Persists per studio. Default = 1w.
