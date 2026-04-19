@@ -3,10 +3,11 @@ import { X, Plus } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { goalRewardEmojis } from '../../lib/rewardEmojis';
 import { getCustomRewards, createCustomReward } from '../../lib/api';
-import type { CustomReward } from '../../lib/types';
+import type { CustomReward, Goal } from '../../lib/types';
 
 interface GoalFormProps {
   studioId: string;
+  initialGoal?: Goal;
   onSubmit: (data: {
     title: string;
     description?: string;
@@ -19,14 +20,14 @@ interface GoalFormProps {
   onClose: () => void;
 }
 
-export default function GoalForm({ studioId, onSubmit, onClose }: GoalFormProps) {
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [targetDate, setTargetDate] = useState('');
-  const [rewardType, setRewardType] = useState<'emoji' | 'custom'>('emoji');
-  const [rewardEmoji, setRewardEmoji] = useState(goalRewardEmojis[0]);
+export default function GoalForm({ studioId, initialGoal, onSubmit, onClose }: GoalFormProps) {
+  const [title, setTitle] = useState(initialGoal?.title || '');
+  const [description, setDescription] = useState(initialGoal?.description || '');
+  const [targetDate, setTargetDate] = useState(initialGoal?.targetDate || '');
+  const [rewardType, setRewardType] = useState<'emoji' | 'custom'>(initialGoal?.rewardType || 'emoji');
+  const [rewardEmoji, setRewardEmoji] = useState(initialGoal?.rewardEmoji || goalRewardEmojis[0]);
   const [customRewards, setCustomRewards] = useState<CustomReward[]>([]);
-  const [selectedCustomReward, setSelectedCustomReward] = useState<string>('');
+  const [selectedCustomReward, setSelectedCustomReward] = useState<string>(initialGoal?.customRewardId || '');
   const [showNewReward, setShowNewReward] = useState(false);
   const [newRewardTitle, setNewRewardTitle] = useState('');
 
@@ -75,7 +76,7 @@ export default function GoalForm({ studioId, onSubmit, onClose }: GoalFormProps)
         className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 space-y-4"
       >
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-bold text-gray-800">New Goal</h3>
+          <h3 className="text-lg font-bold text-gray-800">{initialGoal ? 'Edit Goal' : 'New Goal'}</h3>
           <button type="button" onClick={onClose} className="p-1.5 text-gray-400 hover:text-gray-600">
             <X className="w-5 h-5" />
           </button>
@@ -244,7 +245,7 @@ export default function GoalForm({ studioId, onSubmit, onClose }: GoalFormProps)
           disabled={!title.trim()}
           className="w-full px-6 py-3 bg-primary-600 text-white rounded-xl font-bold hover:bg-primary-700 disabled:opacity-50 transition-colors"
         >
-          Create Goal
+          {initialGoal ? 'Save Changes' : 'Create Goal'}
         </button>
       </motion.form>
     </motion.div>
