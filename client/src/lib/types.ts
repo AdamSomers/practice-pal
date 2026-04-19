@@ -14,6 +14,8 @@ export interface Studio {
   instrument: string | null;
   ownerId: string;
   rewardCategories?: string[];
+  progressTimeRange?: string | null;
+  allowPausing?: boolean;
   createdAt: string;
   role?: StudioRole;
 }

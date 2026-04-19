@@ -23,13 +23,22 @@ progressRouter.get('/studios/:studioId', async (req, res) => {
       .where(eq(schema.practiceCharts.studioId, studioId));
 
     if (charts.length === 0) {
-      res.json({ totalSeconds: 0, sessionCount: 0, weeklyData: [] });
+      res.json({ totalPracticeMinutes: 0, sessionCount: 0, currentStreak: 0, weeklyData: [] });
       return;
     }
 
     const chartIds = charts.map(c => c.id);
 
-    // Total time and session count
+    // Resolve time range. Falls back to studio-saved range, then '1w'.
+    const rangeParam = (req.query.range as string | undefined)
+      || (await db.select({ r: schema.studios.progressTimeRange })
+            .from(schema.studios).where(eq(schema.studios.id, studioId)))[0]?.r
+      || '1w';
+    const bucket = rangeParam === '3mo' || rangeParam === '6mo' ? 'week' : 'day';
+    const rangeDays: Record<string, number> = { '1w': 7, '2w': 14, '1mo': 30, '3mo': 90, '6mo': 180 };
+    const days = rangeDays[rangeParam] || 7;
+
+    // Total time and session count (all-time, not range-limited)
     const [totals] = await db.select({
       totalSeconds: sql<number>`coalesce(sum(${schema.practiceSessions.durationSeconds}), 0)`,
       sessionCount: sql<number>`count(*)`,
@@ -41,9 +50,12 @@ progressRouter.get('/studios/:studioId', async (req, res) => {
         sql`${schema.practiceSessions.completedAt} IS NOT NULL`
       ));
 
-    // Daily data for current week (Mon-Sun)
-    const dailyData = await db.select({
-      day: sql<string>`to_char(${schema.practiceSessions.completedAt}, 'Dy')`,
+    // Bucketed data for the selected range (bucket by day or week)
+    const bucketExpr = bucket === 'week'
+      ? sql`to_char(date_trunc('week', ${schema.practiceSessions.completedAt}), 'YYYY-MM-DD')`
+      : sql`to_char(date(${schema.practiceSessions.completedAt}), 'YYYY-MM-DD')`;
+    const bucketedData = await db.select({
+      bucketKey: sql<string>`${bucketExpr}`.as('bucket_key'),
       totalSeconds: sql<number>`coalesce(sum(${schema.practiceSessions.durationSeconds}), 0)`,
     })
       .from(schema.practiceSessions)
@@ -51,10 +63,10 @@ progressRouter.get('/studios/:studioId', async (req, res) => {
         inArray(schema.practiceSessions.chartId, chartIds),
         eq(schema.practiceSessions.userId, userId),
         sql`${schema.practiceSessions.completedAt} IS NOT NULL`,
-        sql`${schema.practiceSessions.completedAt} >= date_trunc('week', now())`
+        sql`${schema.practiceSessions.completedAt} >= now() - make_interval(days => ${days})`
       ))
-      .groupBy(sql`to_char(${schema.practiceSessions.completedAt}, 'Dy')`)
-      .orderBy(sql`min(${schema.practiceSessions.completedAt})`);
+      .groupBy(sql`bucket_key`)
+      .orderBy(sql`bucket_key`);
 
     // Calculate streak (consecutive days with practice)
     const recentDays = await db.select({
@@ -95,12 +107,38 @@ progressRouter.get('/studios/:studioId', async (req, res) => {
       }
     }
 
-    // Build weeklyData in frontend format
-    const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    const weeklyData = dayNames.map(day => {
-      const match = dailyData.find(d => d.day === day);
-      return { day, minutes: match ? Math.round(Number(match.totalSeconds) / 60) : 0 };
-    });
+    // Build weeklyData: one entry per bucket in the range, filling zero for buckets with no data.
+    const bucketMap = new Map<string, number>();
+    for (const row of bucketedData) {
+      bucketMap.set(row.bucketKey, Math.round(Number(row.totalSeconds) / 60));
+    }
+    const weeklyData: { day: string; minutes: number }[] = [];
+    const now = new Date();
+    if (bucket === 'week') {
+      const weeks = Math.ceil(days / 7);
+      const monday = new Date(now);
+      const dow = (monday.getDay() + 6) % 7;
+      monday.setDate(monday.getDate() - dow);
+      monday.setHours(0, 0, 0, 0);
+      for (let i = weeks - 1; i >= 0; i--) {
+        const start = new Date(monday);
+        start.setDate(start.getDate() - i * 7);
+        const key = start.toISOString().split('T')[0];
+        const label = `${start.toLocaleString('default', { month: 'short' })} ${start.getDate()}`;
+        weeklyData.push({ day: label, minutes: bucketMap.get(key) || 0 });
+      }
+    } else {
+      for (let i = days - 1; i >= 0; i--) {
+        const d = new Date(now);
+        d.setDate(d.getDate() - i);
+        d.setHours(0, 0, 0, 0);
+        const key = d.toISOString().split('T')[0];
+        const label = days <= 7
+          ? d.toLocaleString('default', { weekday: 'short' })
+          : `${d.toLocaleString('default', { month: 'short' })} ${d.getDate()}`;
+        weeklyData.push({ day: label, minutes: bucketMap.get(key) || 0 });
+      }
+    }
 
     res.json({
       totalPracticeMinutes: Math.round(Number(totals.totalSeconds) / 60),

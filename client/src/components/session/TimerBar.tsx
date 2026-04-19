@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
-import { Timer } from 'lucide-react';
+import { Timer, Pause, Play } from 'lucide-react';
 
 interface TimerBarProps {
   targetSeconds: number;
   isRunning: boolean;
   onTimeUpdate?: (seconds: number) => void;
   onTargetReached?: () => void;
+  pausable?: boolean;
 }
 
 function formatTime(totalSeconds: number): string {
@@ -19,18 +20,19 @@ export default function TimerBar({
   isRunning,
   onTimeUpdate,
   onTargetReached,
+  pausable,
 }: TimerBarProps) {
   const [elapsed, setElapsed] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
   const startTimeRef = useRef<number | null>(null);
   const frameRef = useRef<number>(0);
   const reachedRef = useRef(false);
 
   useEffect(() => {
-    if (!isRunning) return;
+    if (!isRunning || isPaused) return;
 
-    if (startTimeRef.current === null) {
-      startTimeRef.current = Date.now() - elapsed * 1000;
-    }
+    // Offset start time so elapsed continues from where it was paused
+    startTimeRef.current = Date.now() - elapsed * 1000;
 
     const tick = () => {
       const now = Date.now();
@@ -51,7 +53,7 @@ export default function TimerBar({
     return () => {
       cancelAnimationFrame(frameRef.current);
     };
-  }, [isRunning, targetSeconds, onTimeUpdate, onTargetReached]);
+  }, [isRunning, isPaused, targetSeconds, onTimeUpdate, onTargetReached]);
 
   const hasTarget = targetSeconds > 0;
   const progress = hasTarget ? Math.min(elapsed / targetSeconds, 1) : 0;
@@ -78,15 +80,31 @@ export default function TimerBar({
             {formatTime(elapsed)}
           </span>
         </div>
-        {hasTarget && (
-          <span
-            className={`text-sm font-semibold ${
-              isComplete ? 'text-white/80' : 'text-gray-400'
-            }`}
-          >
-            / {formatTime(targetSeconds)}
-          </span>
-        )}
+        <div className="flex items-center gap-3">
+          {hasTarget && (
+            <span
+              className={`text-sm font-semibold ${
+                isComplete ? 'text-white/80' : 'text-gray-400'
+              }`}
+            >
+              / {formatTime(targetSeconds)}
+            </span>
+          )}
+          {pausable && (
+            <button
+              type="button"
+              onClick={() => setIsPaused((p) => !p)}
+              className={`p-2 rounded-lg transition-colors ${
+                isComplete
+                  ? 'bg-white/20 text-white hover:bg-white/30'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+              title={isPaused ? 'Resume' : 'Pause'}
+            >
+              {isPaused ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Progress bar */}

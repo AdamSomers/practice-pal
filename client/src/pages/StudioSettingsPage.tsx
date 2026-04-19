@@ -32,6 +32,7 @@ export default function StudioSettingsPage() {
   const [name, setName] = useState('');
   const [instrument, setInstrument] = useState('');
   const [rewardCats, setRewardCats] = useState<string[]>(defaultCategories);
+  const [allowPausing, setAllowPausing] = useState(true);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [showInvite, setShowInvite] = useState(false);
@@ -52,6 +53,7 @@ export default function StudioSettingsPage() {
         setName(studioData.name);
         setInstrument(studioData.instrument || '');
         setRewardCats((studioData.rewardCategories as string[]) || defaultCategories);
+        setAllowPausing(studioData.allowPausing ?? true);
         setMembers(membersData);
       } catch (err) {
         console.error('Failed to load settings:', err);
@@ -69,6 +71,7 @@ export default function StudioSettingsPage() {
         name: name.trim(),
         instrument: instrument.trim() || undefined,
         rewardCategories: rewardCats,
+        allowPausing,
       });
       setStudio(updated);
     } catch (err) {
@@ -174,6 +177,18 @@ export default function StudioSettingsPage() {
             className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-transparent transition"
           />
         </div>
+        <label className="flex items-center justify-between gap-3 py-2">
+          <div>
+            <p className="text-sm font-semibold text-gray-700">Allow session pausing</p>
+            <p className="text-xs text-gray-400">Show a pause button on the practice timer.</p>
+          </div>
+          <input
+            type="checkbox"
+            checked={allowPausing}
+            onChange={(e) => setAllowPausing(e.target.checked)}
+            className="w-5 h-5 rounded accent-primary-600"
+          />
+        </label>
         <button
           onClick={handleSave}
           disabled={saving}

@@ -38,9 +38,9 @@ export default function ProgressPage() {
     if (!id) return;
     (async () => {
       try {
-        const [studioData, progressData, rewardsData, goalsData] = await Promise.all([
-          getStudio(id),
-          getProgress(id).catch(() => null),
+        const studioData = await getStudio(id);
+        const [progressData, rewardsData, goalsData] = await Promise.all([
+          getProgress(id, studioData.progressTimeRange || undefined).catch(() => null),
           getSessionRewards(id).catch(() => []),
           getGoals(id).catch(() => []),
         ]);
@@ -153,7 +153,34 @@ export default function ProgressPage() {
         transition={{ delay: 0.15 }}
         className="bg-white rounded-2xl shadow-md border border-gray-100 p-5"
       >
-        <h2 className="text-lg font-bold text-gray-800 mb-4">This Week</h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-bold text-gray-800">Practice Time</h2>
+          {canEdit && id && (
+            <select
+              value={studio?.progressTimeRange || '1w'}
+              onChange={async (e) => {
+                const range = e.target.value;
+                try {
+                  const [updated, progressData] = await Promise.all([
+                    updateStudio(id, { progressTimeRange: range }),
+                    getProgress(id, range),
+                  ]);
+                  setStudio(updated);
+                  setStats(progressData);
+                } catch (err) {
+                  console.error('Failed to update range:', err);
+                }
+              }}
+              className="px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-sm font-semibold text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-400"
+            >
+              <option value="1w">1w</option>
+              <option value="2w">2w</option>
+              <option value="1mo">1mo</option>
+              <option value="3mo">3mo</option>
+              <option value="6mo">6mo</option>
+            </select>
+          )}
+        </div>
         <div className="h-48">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={progressData.weeklyData}>

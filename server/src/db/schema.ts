@@ -20,6 +20,8 @@ export const studios = pgTable('studios', {
   instrument: text('instrument'),
   ownerId: uuid('owner_id').notNull().references(() => users.id),
   rewardCategories: jsonb('reward_categories').notNull().default('["animals","music","food"]'),
+  progressTimeRange: text('progress_time_range'),
+  allowPausing: boolean('allow_pausing').notNull().default(true),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
