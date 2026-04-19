@@ -5,13 +5,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   getChart,
   getSession,
+  getStudio,
   startSession,
   checkoffItem,
   uncheckItem,
   completeSession,
   claimSessionReward,
 } from '../lib/api';
-import type { SessionReward } from '../lib/types';
+import type { SessionReward, Studio } from '../lib/types';
 import type { ChartItem, PracticeChart, PracticeSession, SessionCheckoff } from '../lib/types';
 import { initAudio } from '../lib/sounds';
 import TimerBar from '../components/session/TimerBar';
@@ -30,6 +31,7 @@ export default function SessionPlayerPage() {
   const navigate = useNavigate();
 
   const [chart, setChart] = useState<(PracticeChart & { items: ChartItem[] }) | null>(null);
+  const [studio, setStudio] = useState<Studio | null>(null);
   const [session, setSession] = useState<PracticeSession | null>(null);
   const [checkState, setCheckState] = useState<CheckState>({});
   const [loading, setLoading] = useState(true);
@@ -50,6 +52,7 @@ export default function SessionPlayerPage() {
       try {
         const chartData = await getChart(chartId);
         setChart(chartData);
+        getStudio(chartData.studioId).then(setStudio).catch(() => {});
 
         // Try to resume an existing session from localStorage
         const sessionKey = `pp_active_session_${chartId}`;
@@ -312,12 +315,14 @@ export default function SessionPlayerPage() {
           isRunning={true}
           onTimeUpdate={setElapsed}
           onTargetReached={() => setTimerMet(true)}
+          pausable={studio?.allowPausing ?? true}
         />
       ) : (
         <TimerBar
           targetSeconds={0}
           isRunning={true}
           onTimeUpdate={setElapsed}
+          pausable={studio?.allowPausing ?? true}
         />
       )}
 

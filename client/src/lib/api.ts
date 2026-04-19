@@ -77,8 +77,13 @@ export const createStudio = (data: { name: string; instrument?: string }) =>
 
 export const getStudio = (id: string) => api.get<Studio>(`/studios/${id}`);
 
-export const updateStudio = (id: string, data: { name?: string; instrument?: string; rewardCategories?: string[] }) =>
-  api.patch<Studio>(`/studios/${id}`, data);
+export const updateStudio = (id: string, data: {
+  name?: string;
+  instrument?: string;
+  rewardCategories?: string[];
+  progressTimeRange?: string;
+  allowPausing?: boolean;
+}) => api.patch<Studio>(`/studios/${id}`, data);
 
 export const deleteStudio = (id: string) =>
   api.delete<{ success: boolean }>(`/studios/${id}`);
@@ -166,8 +171,8 @@ export const completeSession = (sessionId: string, durationSeconds: number) =>
 export const getSessions = (studioId: string) =>
   api.get<PracticeSession[]>(`/progress/studios/${studioId}/sessions`);
 
-export const getProgress = (studioId: string) =>
-  api.get<ProgressStats>(`/progress/studios/${studioId}`);
+export const getProgress = (studioId: string, range?: string) =>
+  api.get<ProgressStats>(`/progress/studios/${studioId}${range ? `?range=${encodeURIComponent(range)}` : ''}`);
 
 // Mastery
 export const getMasteredItems = (studioId: string) =>

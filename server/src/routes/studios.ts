@@ -144,11 +144,13 @@ studiosRouter.patch('/:id', async (req, res) => {
       return;
     }
 
-    const { name, instrument, rewardCategories } = req.body;
+    const { name, instrument, rewardCategories, progressTimeRange, allowPausing } = req.body;
     const updates: Record<string, unknown> = {};
     if (name !== undefined) updates.name = name;
     if (instrument !== undefined) updates.instrument = instrument;
     if (rewardCategories !== undefined) updates.rewardCategories = rewardCategories;
+    if (progressTimeRange !== undefined) updates.progressTimeRange = progressTimeRange;
+    if (allowPausing !== undefined) updates.allowPausing = allowPausing;
 
     const [studio] = await db.update(schema.studios)
       .set(updates)
