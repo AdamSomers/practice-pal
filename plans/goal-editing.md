@@ -1,6 +1,7 @@
 # Goal Editing
 
-**Status:** awaiting-acceptance
+**Status:** merged
+**Version:** v0.2.0
 **Size:** M
 **Branch:** feature/goal-editing
 

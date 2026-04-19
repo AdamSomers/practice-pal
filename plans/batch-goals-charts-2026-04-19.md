@@ -1,6 +1,7 @@
 # Batch S Items - April 19, 2026
 
-**Status:** awaiting-acceptance
+**Status:** merged
+**Version:** v0.2.0
 **Size:** S (x9)
 **Branch:** fix/batch-goals-charts-2026-04-19
 
