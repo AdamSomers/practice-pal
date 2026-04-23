@@ -6,8 +6,10 @@ import v012 from '../../../release-notes/v0.1.2.md?raw';
 import v013 from '../../../release-notes/v0.1.3.md?raw';
 import v014 from '../../../release-notes/v0.1.4.md?raw';
 import v020 from '../../../release-notes/v0.2.0.md?raw';
+import v021 from '../../../release-notes/v0.2.1.md?raw';
 
 const sortedNotes = [
+  { version: 'v0.2.1', content: v021 },
   { version: 'v0.2.0', content: v020 },
   { version: 'v0.1.4', content: v014 },
   { version: 'v0.1.3', content: v013 },
